@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#1c2530">
+  <meta name="description" content="Vigie, console de surveillance des transactions et de suivi des alertes de fraude.">
+  <title>Vigie — Surveillance des transactions</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <svg class="icon-library" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="m12 3 8 3v6c0 5-8 9-8 9s-8-4-8-9V6z"/><path d="m8.5 12 2.5 2.5 4.5-5"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><path d="m10.3 4.7-8 14A1.5 1.5 0 0 0 3.6 21h16.8a1.5 1.5 0 0 0 1.3-2.3l-8-14a2 2 0 0 0-3.4 0Z"/><path d="M12 9v5m0 3v.1"/></symbol>
+    <symbol id="i-arrows" viewBox="0 0 24 24"><path d="M4 7h16m-4-4 4 4-4 4M20 17H4m4-4-4 4 4 4"/></symbol>
+    <symbol id="i-pipeline" viewBox="0 0 24 24"><rect x="2" y="3" width="7" height="6" rx="1.5"/><rect x="15" y="15" width="7" height="6" rx="1.5"/><path d="M5.5 9v8h9.5M9 6h9.5v9"/></symbol>
+    <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 3h13a3 3 0 0 1 3 3v15H6a3 3 0 0 1-3-3V6a3 3 0 0 1 3-3m0 0v13m-3 2a2 2 0 0 1 3-2h14"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12m-5-5 5 5 5-5M4 16v4h16v-4"/></symbol>
+    <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 9a8 8 0 0 0-14-3L3 9m0-6v6h6m-5 6a8 8 0 0 0 14 3l3-3m0 6v-6h-6"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M6 18 18 6"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="m8 4 12 8-12 8z"/></symbol>
+    <symbol id="i-pause" viewBox="0 0 24 24"><path d="M8 4v16M16 4v16"/></symbol>
+    <symbol id="i-pin" viewBox="0 0 24 24"><path d="M19 10c0 5-7 11-7 11S5 15 5 10a7 7 0 0 1 14 0Z"/><circle cx="12" cy="10" r="2"/></symbol>
+    <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+    <symbol id="i-coin" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9 7v10m0-9h4a4 4 0 0 1 0 8H9"/></symbol>
+    <symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 4v16h17M8 16v-5m5 5V6m5 10v-7"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6m0-10v.1"/></symbol>
+    <symbol id="i-server" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="7" rx="2"/><rect x="3" y="14" width="18" height="7" rx="2"/><path d="M7 6.5h.1M7 17.5h.1m4-11h6m-6 11h6"/></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></symbol>
+    <symbol id="i-settings" viewBox="0 0 24 24"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="i-trend-up" viewBox="0 0 24 24"><path d="m3 17 6-6 4 4 8-8"/><path d="M15 7h6v6"/></symbol>
+    <symbol id="i-trend-down" viewBox="0 0 24 24"><path d="m3 7 6 6 4-4 8 8"/><path d="M15 17h6v-6"/></symbol>
+    <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+    <symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+    <symbol id="i-flask" viewBox="0 0 24 24"><path d="M9 3h6M10 3v6L4.5 18.5A1.7 1.7 0 0 0 6 21h12a1.7 1.7 0 0 0 1.5-2.5L14 9V3"/><path d="M7 15h10"/></symbol>
+    <symbol id="i-wallet" viewBox="0 0 24 24"><path d="M20 7V5a2 2 0 0 0-2-2H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></symbol>
+    <symbol id="i-percent" viewBox="0 0 24 24"><path d="M19 5 5 19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></symbol>
+    <symbol id="i-activity" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></symbol>
+    <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></symbol>
+  </svg>
+  <a class="skip-link" href="#main">Aller au contenu</a>
+  <div class="app">
+    <aside class="sidebar" id="sidebar" aria-label="Navigation principale">
+      <div class="sidebar-brand">
+        <a class="brand" href="#overview" aria-label="Vigie, accueil"><img src="/favicon.svg" width="36" height="36" alt=""><span><strong>Vigie</strong><small>Détection de fraude</small></span></a>
+        <button class="icon-button sidebar-close" id="sidebar-close" aria-label="Fermer le menu"><svg class="icon"><use href="#i-close"/></svg></button>
+      </div>
+      <nav class="navigation" aria-label="Pages de la console">
+        <span class="nav-section">Surveillance</span>
+        <a class="nav-item" href="#overview" data-view="overview"><svg class="icon"><use href="#i-grid"/></svg><span>Vue d’ensemble</span></a>
+        <a class="nav-item" href="#alerts" data-view="alerts"><svg class="icon"><use href="#i-alert"/></svg><span>Alertes</span><span class="nav-count" id="nav-alert-count" title="Alertes à traiter">—</span></a>
+        <a class="nav-item" href="#transactions" data-view="transactions"><svg class="icon"><use href="#i-arrows"/></svg><span>Transactions</span></a>
+        <span class="nav-section">Outils</span>
+        <a class="nav-item" href="#demo" data-view="demo" id="demo-nav" hidden><svg class="icon"><use href="#i-flask"/></svg><span>Atelier de démo</span></a>
+        <a class="nav-item" href="#pipeline" data-view="pipeline"><svg class="icon"><use href="#i-pipeline"/></svg><span>Pipeline & règles</span></a>
+        <a class="nav-item" href="#guide" data-view="guide"><svg class="icon"><use href="#i-book"/></svg><span>Guide</span></a>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="demo-notice" id="demo-notice" hidden>
+          <div class="demo-notice-head"><svg class="icon"><use href="#i-info"/></svg><strong id="demo-notice-title">Mode démonstration.</strong></div>
+          <p id="demo-notice-copy">Transactions simulées, règles de détection actives.</p>
+          <div class="demo-notice-actions"><a href="#demo" class="demo-shortcut">Tester un scénario<svg class="icon"><use href="#i-chevron"/></svg></a><button id="pause-button" class="text-button"><svg class="icon"><use href="#i-pause"/></svg><span>Mettre en pause</span></button></div>
+        </div>
+        <p class="sidebar-meta">Mini-projet 06 · Spark · Kafka · Cassandra</p>
+      </div>
+    </aside>
+    <div class="sidebar-backdrop" id="sidebar-backdrop" hidden></div>
+    <div class="workspace">
+      <header class="topbar">
+        <button class="icon-button mobile-menu" id="menu-button" aria-label="Menu principal" aria-controls="sidebar" aria-expanded="false"><svg class="icon"><use href="#i-menu"/></svg></button>
+        <a class="brand topbar-brand" href="#overview" aria-label="Vigie, accueil"><img src="/favicon.svg" width="30" height="30" alt=""><strong>Vigie</strong></a>
+        <form class="global-search" id="global-search" role="search">
+          <svg class="icon"><use href="#i-search"/></svg>
+          <label class="sr-only" for="global-search-input">Rechercher dans les alertes</label>
+          <input id="global-search-input" type="search" placeholder="Rechercher une alerte, un client, une ville…" autocomplete="off">
+          <kbd>Entrée</kbd>
+        </form>
+        <div class="topbar-actions">
+          <div class="period-control"><svg class="icon"><use href="#i-clock"/></svg><label class="sr-only" for="period">Période d’analyse</label><select id="period" class="select period"><option value="15m">15 dernières minutes</option><option value="1h" selected>Dernière heure</option><option value="24h">Dernières 24 heures</option></select></div>
+          <button class="icon-button refresh-button" id="refresh-button" aria-label="Actualiser les données" title="Actualiser les données"><svg class="icon"><use href="#i-refresh"/></svg></button>
+          <button class="button primary export-button" id="export-button"><svg class="icon"><use href="#i-download"/></svg><span>Exporter</span></button>
+          <div class="popover-anchor">
+            <button class="icon-button" id="notifications-button" aria-label="Notifications" title="Notifications" aria-controls="notifications-panel" aria-expanded="false"><svg class="icon"><use href="#i-bell"/></svg><span class="notification-count" id="notifications-count" hidden>0</span></button>
+            <div class="popover" id="notifications-panel" role="dialog" aria-label="Notifications" hidden>
+              <div class="popover-head"><strong>Notifications</strong><span id="notifications-summary">—</span></div>
+              <div class="notification-list" id="notifications-list"></div>
+              <button class="popover-link" id="notifications-all">Voir les alertes à traiter<svg class="icon"><use href="#i-chevron"/></svg></button>
+            </div>
+          </div>
+          <div class="popover-anchor">
+            <button class="icon-button" id="settings-button" aria-label="Paramètres" title="Paramètres" aria-controls="settings-panel" aria-expanded="false"><svg class="icon"><use href="#i-settings"/></svg></button>
+            <div class="popover settings-popover" id="settings-panel" role="dialog" aria-label="Paramètres" hidden>
+              <div class="popover-head"><strong>Paramètres</strong><span>Console locale</span></div>
+              <button class="popover-item" id="settings-refresh"><svg class="icon"><use href="#i-refresh"/></svg><span><strong>Actualiser maintenant</strong><small>Mise à jour automatique toutes les 5 secondes</small></span></button>
+              <button class="popover-item" id="settings-pause" hidden><svg class="icon"><use href="#i-pause"/></svg><span><strong id="settings-pause-label">Mettre le flux en pause</strong><small>Flux automatique de démonstration</small></span></button>
+              <button class="popover-item" id="settings-services"><svg class="icon"><use href="#i-server"/></svg><span><strong>Vérifier les services</strong><small>Kafka, Spark et Cassandra</small></span></button>
+              <p class="popover-note">Montants en dirhams · heures du Maroc (Africa/Casablanca)</p>
+            </div>
+          </div>
+          <span class="mode-badge" id="mode-badge">Connexion…</span>
+        </div>
+      </header>
+      <main id="main" tabindex="-1">
+        <div class="page-heading"><div><h1 id="page-title">Vue d’ensemble</h1><p id="page-subtitle">Transactions et alertes sur les 60 dernières minutes.</p></div><span class="freshness-chip" id="freshness-chip"><span class="status-dot"></span><span id="freshness-text">Connexion…</span></span></div>
+        <div class="connection-error" id="connection-error" role="alert" hidden><svg class="icon"><use href="#i-alert"/></svg><span id="connection-error-text"></span><button class="button small" id="retry-button">Réessayer</button></div>
+        <div class="consistency-notice" id="consistency-notice" role="status" hidden></div>
+        <div class="loading-state" id="loading-state"><span class="loader"></span>Chargement de la surveillance…</div>
+
+        <section id="view-overview" class="view" aria-label="Vue d’ensemble" hidden>
+          <div class="kpi-grid">
+            <article class="kpi-card">
+              <div class="kpi-top"><span class="kpi-icon"><svg class="icon"><use href="#i-arrows"/></svg></span><span class="trend" id="trend-transactions"></span></div>
+              <h2 class="kpi-label">Transactions analysées</h2>
+              <p class="kpi-value" id="kpi-transactions">—</p>
+              <p class="kpi-note" id="kpi-clients">—</p>
+              <div class="sparkline" id="spark-transactions" aria-hidden="true"></div>
+            </article>
+            <article class="kpi-card">
+              <div class="kpi-top"><span class="kpi-icon danger"><svg class="icon"><use href="#i-alert"/></svg></span><span class="trend" id="trend-alerts"></span></div>
+              <h2 class="kpi-label">Alertes détectées</h2>
+              <p class="kpi-value" id="kpi-alerts">—</p>
+              <p class="kpi-note"><span id="kpi-open">—</span> · <span id="kpi-critical">—</span></p>
+              <div class="sparkline" id="spark-alerts" aria-hidden="true"></div>
+            </article>
+            <article class="kpi-card">
+              <div class="kpi-top"><span class="kpi-icon"><svg class="icon"><use href="#i-wallet"/></svg></span><span class="trend" id="trend-volume"></span></div>
+              <h2 class="kpi-label">Volume des transactions</h2>
+              <p class="kpi-value" id="kpi-volume">—</p>
+              <p class="kpi-note">Montant cumulé sur la période</p>
+              <div class="sparkline" id="spark-volume" aria-hidden="true"></div>
+            </article>
+            <article class="kpi-card">
+              <div class="kpi-top"><span class="kpi-icon"><svg class="icon"><use href="#i-percent"/></svg></span><span class="trend" id="trend-rate"></span></div>
+              <h2 class="kpi-label">Taux de transactions signalées</h2>
+              <p class="kpi-value" id="kpi-rate">—</p>
+              <p class="kpi-note" id="kpi-flagged">—</p>
+              <div class="sparkline" id="spark-rate" aria-hidden="true"></div>
+            </article>
+          </div>
+          <p class="trend-legend" id="trend-legend">Tendances : seconde moitié de la période comparée à la première.</p>
+
+          <div class="dashboard-grid">
+            <div class="dashboard-main">
+              <article class="card risk-overview">
+                <div class="card-head"><div><h2>Vue globale des risques</h2><p>Alertes de la période par niveau de gravité</p></div><a href="#alerts" class="link-button">Analyser<svg class="icon"><use href="#i-chevron"/></svg></a></div>
+                <div class="risk-body">
+                  <div class="risk-exposure"><span class="eyebrow">Montant signalé</span><p id="exposure-value">—</p><small>Somme des opérations distinctes signalées sur la période. La perte éventuelle reste à confirmer.</small></div>
+                  <div class="risk-levels"><div class="severity-bar" id="severity-bar" role="img" aria-label="Répartition des alertes par gravité"></div><div class="severity-legend" id="severity-legend"></div></div>
+                </div>
+                <div class="risk-stats" id="risk-stats"></div>
+              </article>
+
+              <article class="card activity-panel">
+                <div class="card-head"><div><h2>Évolution des transactions et des alertes</h2><p id="chart-caption">—</p></div><div class="chart-legend"><span class="legend-transactions">Transactions</span><span class="legend-alerts">Alertes</span></div></div>
+                <div class="activity-chart" id="activity-chart" role="img" aria-label="Transactions et alertes sur la période"></div>
+              </article>
+
+              <article class="card latest">
+                <div class="card-head"><div><h2>Dernières alertes</h2><p id="recent-foot">—</p></div><a href="#alerts" class="link-button">Tout voir<svg class="icon"><use href="#i-chevron"/></svg></a></div>
+                <div class="table-scroll"><table class="compact"><thead><tr><th>Alerte / client</th><th>Gravité</th><th>Ville</th><th class="align-right">Montant</th><th>Statut</th><th><span class="sr-only">Détail</span></th></tr></thead><tbody id="recent-alerts"></tbody></table></div>
+              </article>
+
+              <article class="card cities-panel">
+                <div class="card-head"><div><h2>Activité par ville</h2><p>Transactions et alertes par ville du référentiel</p></div></div>
+                <div id="city-list"></div>
+              </article>
+            </div>
+
+            <aside class="dashboard-side" aria-label="Suivi des risques">
+              <article class="card priority-panel">
+                <div class="card-head"><div class="priority-heading"><span class="card-icon danger"><svg class="icon"><use href="#i-shield"/></svg></span><h2>Alertes critiques</h2></div></div>
+                <p class="priority-title" id="priority-title">Chargement…</p>
+                <ul class="critical-list" id="critical-list"></ul>
+                <button class="critical-shortcut" id="priority-critical"><strong id="priority-count">—</strong> critiques à traiter<svg class="icon"><use href="#i-chevron"/></svg></button>
+                <button class="button primary block" id="priority-open">Examiner les alertes<svg class="icon"><use href="#i-chevron"/></svg></button>
+              </article>
+
+              <article class="card distribution-panel">
+                <div class="card-head"><div><h2>Alertes par règle</h2><p>Cliquez sur une règle pour filtrer</p></div></div>
+                <div class="donut-wrap"><div class="donut" id="distribution-chart" role="img" aria-label="Répartition des alertes par règle"></div><div id="distribution-legend"></div></div>
+              </article>
+
+              <article class="card indicators-panel">
+                <div class="card-head"><div><h2>Indicateurs de risque</h2><p>Calculés sur la période sélectionnée</p></div></div>
+                <ul class="indicator-list" id="risk-indicators"></ul>
+              </article>
+            </aside>
+          </div>
+        </section>
+
+        <section id="view-alerts" class="view" aria-label="Alertes" hidden>
+          <div class="inline-summary" id="alert-summary"></div>
+          <article class="panel">
+            <div class="list-tabs" id="alert-tabs" role="group" aria-label="Filtrer par statut"><button data-tab="all" class="selected">Toutes les alertes <span id="tab-all">0</span></button><button data-tab="open">À traiter <span id="tab-open">0</span></button><button data-tab="en_cours">En cours</button><button data-tab="closed">Clôturées</button></div>
+            <div class="table-toolbar"><label class="search-field"><svg class="icon"><use href="#i-search"/></svg><input id="alert-search" type="search" placeholder="Rechercher un client, une ville, un identifiant…" aria-label="Rechercher dans les alertes"></label><label class="sr-only" for="rule-filter">Règle de détection</label><select id="rule-filter" class="select"><option value="all">Toutes les règles</option><option value="MONTANT_ELEVE">Montant élevé</option><option value="VOYAGE_IMPOSSIBLE">Déplacement impossible</option><option value="FREQUENCE_ELEVEE">Fréquence inhabituelle</option></select><label class="sr-only" for="severity-filter">Niveau de gravité</label><select id="severity-filter" class="select"><option value="all">Tous les niveaux</option><option value="critique">Critique</option><option value="élevée">Élevée</option><option value="modérée">Modérée</option></select><label class="sr-only" for="alert-sort">Trier les alertes</label><select class="select" id="alert-sort"><option value="date">Plus récentes</option><option value="priority">Priorité la plus élevée</option><option value="amount">Montant décroissant</option></select><button class="button filter-reset" id="clear-alert-filters" hidden><svg class="icon"><use href="#i-close"/></svg>Effacer les filtres</button></div>
+            <div class="table-scroll"><table class="alert-table"><thead><tr><th>Alerte</th><th>Gravité</th><th>Client</th><th>Localisation</th><th class="align-right">Montant</th><th>Date et heure</th><th>Statut</th><th><span class="sr-only">Détail</span></th></tr></thead><tbody id="all-alerts"></tbody></table></div>
+            <div class="pagination"><span id="alert-result-count"></span><div><button class="button small" id="alert-prev" aria-label="Page précédente">Précédent</button><span id="alert-page"></span><button class="button small" id="alert-next" aria-label="Page suivante">Suivant</button></div></div>
+          </article>
+        </section>
+
+        <section id="view-transactions" class="view" aria-label="Transactions" hidden>
+          <div class="inline-summary" id="transaction-summary"></div>
+          <article class="panel">
+            <div class="table-toolbar"><label class="search-field"><svg class="icon"><use href="#i-search"/></svg><input id="transaction-search" type="search" placeholder="Rechercher une transaction, un client, une ville…" aria-label="Rechercher dans les transactions"></label><label class="sr-only" for="transaction-filter">Type de transaction</label><select id="transaction-filter" class="select"><option value="all">Toutes les transactions</option><option value="flagged">Transactions signalées</option><option value="normal">Sans alerte associée</option></select><button class="button filter-reset" id="clear-transaction-filters" hidden><svg class="icon"><use href="#i-close"/></svg>Effacer les filtres</button></div>
+            <div class="table-scroll"><table><thead><tr><th>Transaction</th><th>Client</th><th>Commerce</th><th>Localisation</th><th class="align-right">Montant</th><th>Date et heure</th><th>Détection</th></tr></thead><tbody id="all-transactions"></tbody></table></div>
+            <div class="pagination"><span id="transaction-result-count"></span><div><button class="button small" id="transaction-prev">Précédent</button><span id="transaction-page"></span><button class="button small" id="transaction-next">Suivant</button></div></div>
+          </article>
+        </section>
+
+        <section id="view-demo" class="view" aria-label="Atelier de démonstration" hidden>
+          <fieldset class="scenario-picker"><legend class="sr-only">Choisir un scénario</legend>
+            <label class="scenario-choice"><input type="radio" name="scenario-kind" value="normale"><span class="choice-icon"><svg class="icon"><use href="#i-check"/></svg></span><span><strong>Paiement habituel</strong><small>Une opération courante</small></span></label>
+            <label class="scenario-choice"><input type="radio" name="scenario-kind" value="montant" checked><span class="choice-icon"><svg class="icon"><use href="#i-coin"/></svg></span><span><strong>Montant à examiner</strong><small>Tester le seuil de 10 000 DH</small></span></label>
+            <label class="scenario-choice"><input type="radio" name="scenario-kind" value="voyage"><span class="choice-icon"><svg class="icon"><use href="#i-pin"/></svg></span><span><strong>Deux villes, une carte</strong><small>Comparer distance et intervalle</small></span></label>
+            <label class="scenario-choice"><input type="radio" name="scenario-kind" value="frequence"><span class="choice-icon"><svg class="icon"><use href="#i-clock"/></svg></span><span><strong>Paiements rapprochés</strong><small>Explorer la fenêtre de 2 minutes</small></span></label>
+          </fieldset>
+          <div class="demo-workbench">
+            <div class="demo-configuration">
+              <form id="scenario-form" class="panel scenario-form">
+                <div class="panel-heading"><div><h2>Préparer l’essai</h2><p>Un nouveau client est créé à chaque essai pour isoler le résultat.</p></div></div>
+                <div class="scenario-fields">
+                  <div data-options="normale" hidden><p class="field-intro">Un paiement dans une ville du référentiel, avec un montant inférieur à 2 800 DH.</p><div class="expected-result">Aucune alerte attendue pour ce client.</div></div>
+                  <div data-options="montant"><label class="field-label" for="demo-amount">Montant de la transaction</label><div class="input-with-unit"><input type="number" id="demo-amount" min="0.01" max="999999999.99" step="0.01" value="14500" required><span>DH</span></div><div class="amount-presets"><button type="button" data-amount="10000">10 000</button><button type="button" data-amount="10000.01">10 000,01</button><button type="button" data-amount="14500">14 500</button></div><p class="field-help">Le seuil est strict : 10 000 DH ne déclenche pas d’alerte.</p><div class="expected-result" id="amount-prediction">Une alerte de montant élevé est attendue.</div></div>
+                  <div data-options="voyage" hidden><div class="route-fields"><div><label class="field-label" for="demo-from">Ville de départ</label><select class="select" id="demo-from" disabled><option>Casablanca</option><option>Rabat</option><option>Marrakech</option><option>Tanger</option><option>Fès</option><option>Agadir</option><option>Oujda</option><option>Meknès</option></select></div><span class="route-arrow"><svg class="icon"><use href="#i-arrows"/></svg></span><div><label class="field-label" for="demo-to">Ville d’arrivée</label><select class="select" id="demo-to" disabled><option>Casablanca</option><option>Rabat</option><option>Marrakech</option><option selected>Tanger</option><option>Fès</option><option>Agadir</option><option>Oujda</option><option>Meknès</option></select></div></div><label class="field-label" for="demo-elapsed">Temps entre les paiements</label><div class="input-with-unit"><input type="number" id="demo-elapsed" min="1" max="300" step="any" value="40" required disabled><span>secondes</span></div><p class="field-help">Deux transactions d’un même client. La détection examine les intervalles jusqu’à 120 secondes.</p></div>
+                  <div data-options="frequence" hidden><label class="field-label" for="demo-count">Nombre de transactions</label><select class="select" id="demo-count" disabled><option value="2">2 transactions · sous le seuil</option><option value="3" selected>3 transactions · seuil de détection</option><option value="4">4 transactions</option><option value="5">5 transactions</option><option value="8">8 transactions</option></select><p class="field-help">Les paiements sont placés dans une même fenêtre de deux minutes. Une seule alerte est actualisée quand le compteur augmente.</p></div>
+                  <div class="form-error" id="scenario-error" role="alert" hidden></div>
+                  <button type="submit" class="button primary run-scenario" id="run-scenario"><svg class="icon"><use href="#i-play"/></svg><span>Lancer l’essai</span></button>
+                  <p class="scenario-reassurance">Les transactions et les alertes restent consultables dans les journaux.</p>
+                </div>
+              </form>
+              <div class="panel demo-flow"><div class="demo-flow-head"><span class="tiny-dot green" id="demo-flow-dot"></span><strong id="demo-flow-status">Flux automatique actif</strong></div><p>Vous pouvez mettre le flux en pause pour examiner un essai à votre rythme.</p><div class="flow-settings"><label class="sr-only" for="demo-speed">Cadence du flux automatique</label><select class="select" id="demo-speed"><option value="5">Lent · toutes les 5 s</option><option value="3" selected>Normal · toutes les 3 s</option><option value="1">Rapide · chaque seconde</option></select><button type="button" id="demo-pause-button" class="button">Mettre en pause</button></div></div>
+            </div>
+            <article class="panel demo-result-panel"><div class="panel-heading"><div><h2>Résultat de l’essai</h2><p>Transactions produites et alertes associées</p></div><span class="badge neutral" id="demo-result-state">En attente</span></div><div id="demo-result" aria-live="polite"><div class="demo-empty"><span class="demo-empty-icon"><svg class="icon"><use href="#i-shield"/></svg></span><h3>Votre prochain essai apparaîtra ici</h3><p>Choisissez un cas, puis lancez l’essai.<br>Vous pourrez ouvrir chaque alerte et retrouver les transactions du client.</p><span>Chaque essai utilise un client distinct.</span></div></div></article>
+          </div>
+        </section>
+
+        <section id="view-pipeline" class="view" aria-label="Pipeline et règles" hidden>
+          <article class="panel architecture-panel"><div class="panel-heading"><div><h2>De la transaction à l’alerte</h2><p>Une source, trois règles et deux sorties distinctes</p></div><button class="button small" id="health-refresh"><svg class="icon"><use href="#i-refresh"/></svg>Vérifier les services</button></div><div class="pipeline-diagram pipeline-branch">
+            <div class="pipeline-node"><span class="node-icon"><svg class="icon"><use href="#i-arrows"/></svg></span><span class="node-step">01 · INGESTION</span><h3>Apache Kafka</h3><code>financial-transactions</code><span id="health-Kafka" class="service-state">Non vérifié</span></div>
+            <span class="pipeline-arrow" aria-hidden="true"><svg class="icon"><use href="#i-chevron"/></svg></span>
+            <div class="pipeline-node emphasized"><span class="node-icon"><svg class="icon"><use href="#i-pipeline"/></svg></span><span class="node-step">02 · DÉTECTION</span><h3>Apache Spark</h3><code>Structured Streaming</code><span id="health-Spark" class="service-state">Non vérifié</span></div>
+            <span class="pipeline-arrow" aria-hidden="true"><svg class="icon"><use href="#i-chevron"/></svg></span>
+            <div class="pipeline-outputs"><span class="output-caption">DEUX SORTIES DU JOB SPARK</span>
+              <div class="pipeline-node"><span class="node-icon"><svg class="icon"><use href="#i-server"/></svg></span><span class="node-step">03 · PERSISTANCE</span><h3>Apache Cassandra</h3><code>fraud_monitoring.detected_alerts</code><span id="health-Cassandra" class="service-state">Non vérifié</span></div>
+              <div class="pipeline-node"><span class="node-icon"><svg class="icon"><use href="#i-bell"/></svg></span><span class="node-step">04 · PUBLICATION</span><h3>Alertes Kafka</h3><code>fraud-alerts</code><span class="service-state">Lecture par les consommateurs</span></div>
+            </div>
+          </div><p class="architecture-note"><svg class="icon"><use href="#i-info"/></svg>Spark écrit les alertes dans Cassandra, puis les publie dans Kafka. Ces écritures ne sont pas atomiques. La console consulte Cassandra.</p></article>
+          <div class="section-label"><h2>Règles de détection</h2><span>Seuils du projet · montants en dirhams</span></div><div class="rules-grid"><article class="panel rule-card rule-high"><div class="rule-card-top"><span class="rule-indicator">
+            <svg class="icon"><use href="#i-coin"/></svg></span><span class="rule-number">RÈGLE 01</span><span class="badge severity-high">Élevée</span></div><h3>Montant élevé</h3><p>Une alerte dès qu’une transaction dépasse le seuil défini.</p><div class="rule-value">&gt; 10 000 <span>DH</span></div><div class="rule-foot">Seuil strict : 10 000 DH ne déclenche pas d’alerte.</div></article><article class="panel rule-card rule-critical"><div class="rule-card-top"><span class="rule-indicator critical"><svg class="icon"><use href="#i-pin"/></svg></span><span class="rule-number">RÈGLE 02</span><span class="badge severity-critical">Critique</span></div><h3>Déplacement impossible</h3><p>Deux transactions d’un même client dans des villes trop éloignées.</p><div class="rule-value">&gt; 900 <span>km/h</span></div><div class="rule-foot">Intervalle ≤ 2 min · distance ≥ 50 km · formule de Haversine.</div></article><article class="panel rule-card rule-medium"><div class="rule-card-top"><span class="rule-indicator medium"><svg class="icon"><use href="#i-clock"/></svg></span><span class="rule-number">RÈGLE 03</span><span class="badge severity-medium">Modérée</span></div><h3>Fréquence inhabituelle</h3><p>Plusieurs transactions du même client dans une fenêtre temporelle.</p><div class="rule-value">≥ 3 <span>transactions</span></div><div class="rule-foot">Fenêtres fixes de 2 min, calculées en temps événement.</div></article></div>
+          <article class="panel scenario-panel" id="scenario-panel"><div class="panel-heading"><div><h2>Tester un scénario</h2><p>Injectez un cas dans la démonstration, puis retrouvez son résultat dans les alertes.</p></div><span class="badge neutral">Démonstration</span></div><div class="scenario-buttons"><button class="button" data-scenario="normale"><svg class="icon"><use href="#i-check"/></svg>Transaction normale</button><button class="button" data-scenario="montant"><svg class="icon"><use href="#i-coin"/></svg>Montant de 14 500 DH</button><button class="button" data-scenario="voyage"><svg class="icon"><use href="#i-pin"/></svg>Casablanca → Tanger</button><button class="button" data-scenario="frequence"><svg class="icon"><use href="#i-clock"/></svg>3 transactions rapprochées</button></div></article>
+          <details class="panel technical-details"><summary>Garanties de traitement et limites</summary><div><p><strong>Temps événement.</strong> Spark utilise l’horodatage de la transaction et un watermark de 10 minutes pour borner son état. Les fenêtres de fréquence sont actualisées dès le troisième événement ; leur compteur peut évoluer jusqu’à la clôture par le watermark.</p><p><strong>Reprise.</strong> Chaque requête possède son checkpoint. Les alertes reçoivent un identifiant déterministe ; les écritures Cassandra sont des upserts. La publication Kafka peut être rejouée : les consommateurs doivent appliquer les mises à jour par <code>alert_id</code>.</p><p><strong>Supervision.</strong> Une connexion TCP réussie indique un port joignable. Elle ne prouve pas le bon fonctionnement de toute la chaîne. Les erreurs Cassandra sont affichées sans remplacement par des données simulées.</p><p><strong>Géographie.</strong> Le référentiel contient huit villes marocaines. Une ville inconnue ou un message invalide est envoyé dans le topic de rejet.</p></div></details>
+        </section>
+
+        <section id="view-guide" class="view" aria-label="Guide du projet" hidden>
+          <div class="guide-grid"><article class="panel guide-card"><span class="guide-icon"><svg class="icon"><use href="#i-chart"/></svg></span><h3>Lire les indicateurs</h3><p>Choisissez une période en haut de page. Tous les indicateurs, graphiques et listes suivent cette période. Les montants sont exprimés en DH et les heures sont affichées dans le fuseau Africa/Casablanca.</p><p>Une transaction peut déclencher plusieurs règles. Le taux de transactions signalées compte chaque transaction une seule fois.</p></article><article class="panel guide-card"><span class="guide-icon"><svg class="icon"><use href="#i-shield"/></svg></span><h3>Suivre une alerte</h3><p>Dans « Alertes », recherchez un client ou filtrez par règle et niveau. Ouvrez une ligne pour lire les motifs et les données de la transaction.</p><p>Faites passer l’alerte en cours d’analyse, puis confirmez-la ou écartez-la. Le suivi est conservé localement et persiste après un redémarrage.</p></article><article class="panel guide-card"><span class="guide-icon"><svg class="icon"><use href="#i-flask"/></svg></span><h3>Vérifier les détections</h3><p>L’« Atelier de démo » permet de faire varier quatre cas : montant, déplacement, fréquence ou paiement habituel. Chaque essai affiche les transactions et les alertes produites.</p><p>Vous pouvez mettre le flux en pause ou changer sa cadence. Les essais manuels restent disponibles pendant la pause.</p></article><article class="panel guide-card"><span class="guide-icon"><svg class="icon"><use href="#i-download"/></svg></span><h3>Conserver les résultats</h3><p>Le bouton « Exporter » produit un CSV compatible avec les tableurs. Depuis les alertes ou les transactions, il reprend la recherche et les filtres actifs, sur toutes les pages.</p><p>Les données de démonstration sont identifiées dans le fichier exporté.</p></article></div><article class="panel guide-card project-files"><h3>Livrables du mini-projet</h3><div><code>streaming_cassandra.py</code><span>Traitement Spark et persistance des alertes</span></div><div><code>submit.sh</code><span>Soumission au cluster avec les connecteurs Maven</span></div><div><code>schema.cql</code><span>Keyspace et tables Cassandra</span></div><div><code>compose.yaml</code><span>Configuration du cluster conteneurisé</span></div><div><code>docs/rapport.md</code><span>Architecture, choix techniques et protocole de validation</span></div><p>Consultez le README à la racine pour les commandes de lancement. Aucun composant du cluster n’est installé par la console.</p></article>
+        </section>
+        <footer class="main-footer"><span>Vigie <span class="footer-dot">·</span> Surveillance des transactions financières</span><span id="data-freshness">Connexion en cours…</span></footer>
+      </main>
+    </div>
+  </div>
+  <dialog id="alert-dialog" class="alert-dialog" aria-labelledby="dialog-title"><div class="drawer-header"><span class="eyebrow">FICHE D’INVESTIGATION</span><button class="icon-button" id="close-dialog" aria-label="Fermer le détail"><svg class="icon"><use href="#i-close"/></svg></button></div><div class="drawer-navigation"><button class="button small" id="detail-prev" aria-label="Alerte précédente">← Précédente</button><span id="detail-position"></span><button class="button small" id="detail-next" aria-label="Alerte suivante">Suivante →</button></div><div id="alert-detail"></div><button class="client-transactions-link" id="detail-client-transactions">Voir les transactions de ce client<svg class="icon"><use href="#i-chevron"/></svg></button><form id="review-form" class="review-form"><label for="review-status">Suivi de l’alerte</label><select id="review-status" class="select"><option value="nouvelle">Nouvelle</option><option value="en_cours">En cours d’analyse</option><option value="confirmee">Fraude confirmée</option><option value="ecartee">Alerte écartée</option></select><button type="submit" class="button primary" id="save-review"><svg class="icon"><use href="#i-check"/></svg>Enregistrer le suivi</button><p>Le statut est conservé dans le journal local de la console.</p></form></dialog>
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+  <noscript>Activez JavaScript pour consulter le tableau de bord.</noscript>
+</body>
+</html>

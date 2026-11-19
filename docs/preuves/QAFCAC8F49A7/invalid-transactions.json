@@ -1,0 +1,342 @@
+[
+  {
+    "raw": "{\"transaction_id\": \"QA3B7A4D156A-bad-city\", \"card_holder_id\": \"QA3B7A4D156A-invalid\", \"amount\": 125.25, \"location\": \"Inconnue\", \"merchant_type\": \"Électronique\", \"timestamp\": \"2026-11-18T11:16:30.000Z\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"QA3B7A4D156A-bad-amount\", \"card_holder_id\": \"QA3B7A4D156A-invalid\", \"amount\": -1, \"location\": \"Casablanca\", \"merchant_type\": \"Électronique\", \"timestamp\": \"2026-11-18T11:16:30.000Z\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"QA3B7A4D156A-bad-decimal\", \"card_holder_id\": \"QA3B7A4D156A-invalid\", \"amount\": 12.345, \"location\": \"Casablanca\", \"merchant_type\": \"Électronique\", \"timestamp\": \"2026-11-18T11:16:30.000Z\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"QA3B7A4D156A-bad-bool\", \"card_holder_id\": \"QA3B7A4D156A-invalid\", \"amount\": true, \"location\": \"Casablanca\", \"merchant_type\": \"Électronique\", \"timestamp\": \"2026-11-18T11:16:30.000Z\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"QA3B7A4D156A-bad-time\", \"card_holder_id\": \"QA3B7A4D156A-invalid\", \"amount\": 125.25, \"location\": \"Casablanca\", \"merchant_type\": \"Électronique\", \"timestamp\": \"2026-11-17T10:00:00\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"QA3B7A4D156A-bad-future\", \"card_holder_id\": \"QA3B7A4D156A-invalid\", \"amount\": 125.25, \"location\": \"Casablanca\", \"merchant_type\": \"Électronique\", \"timestamp\": \"2026-11-18T12:20:42.974Z\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"QA3B7A4D156A-bad-merchant\", \"card_holder_id\": \"QA3B7A4D156A-invalid\", \"amount\": 125.25, \"location\": \"Casablanca\", \"merchant_type\": \" \", \"timestamp\": \"2026-11-18T11:16:30.000Z\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"QA3B7A4D156A-bad-missing\", \"card_holder_id\": \"QA3B7A4D156A-invalid\", \"amount\": 125.25, \"merchant_type\": \"Électronique\", \"timestamp\": \"2026-11-18T11:16:30.000Z\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"AUD5F432DA3-SPACETS\", \"card_holder_id\": \"AUD5F432DA3-C2\", \"amount\": 100.0, \"location\": \"Casablanca\", \"merchant_type\": \"Test\", \"timestamp\": \"2026-11-18 11:26:38Z\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"AUD5F432DA3-FUTURE\", \"card_holder_id\": \"AUD5F432DA3-C5\", \"amount\": 100.0, \"location\": \"Casablanca\", \"merchant_type\": \"Test\", \"timestamp\": \"2026-12-18T11:26:38Z\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"AUD5F432DA3-NOTZ\", \"card_holder_id\": \"AUD5F432DA3-C6\", \"amount\": 100.0, \"location\": \"Casablanca\", \"merchant_type\": \"Test\", \"timestamp\": \"2026-11-18T11:26:38\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"QA2FD8F834FC-bad-city\", \"card_holder_id\": \"QA2FD8F834FC-invalid\", \"amount\": 125.25, \"location\": \"Inconnue\", \"merchant_type\": \"Électronique\", \"timestamp\": \"2026-11-18T12:44:30.000Z\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"QA2FD8F834FC-bad-amount\", \"card_holder_id\": \"QA2FD8F834FC-invalid\", \"amount\": -1, \"location\": \"Casablanca\", \"merchant_type\": \"Électronique\", \"timestamp\": \"2026-11-18T12:44:30.000Z\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"QA2FD8F834FC-bad-decimal\", \"card_holder_id\": \"QA2FD8F834FC-invalid\", \"amount\": 12.345, \"location\": \"Casablanca\", \"merchant_type\": \"Électronique\", \"timestamp\": \"2026-11-18T12:44:30.000Z\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"QA2FD8F834FC-bad-bool\", \"card_holder_id\": \"QA2FD8F834FC-invalid\", \"amount\": true, \"location\": \"Casablanca\", \"merchant_type\": \"Électronique\", \"timestamp\": \"2026-11-18T12:44:30.000Z\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"QA2FD8F834FC-bad-time\", \"card_holder_id\": \"QA2FD8F834FC-invalid\", \"amount\": 125.25, \"location\": \"Casablanca\", \"merchant_type\": \"Électronique\", \"timestamp\": \"2026-11-17T10:00:00\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"QA2FD8F834FC-bad-future\", \"card_holder_id\": \"QA2FD8F834FC-invalid\", \"amount\": 125.25, \"location\": \"Casablanca\", \"merchant_type\": \"Électronique\", \"timestamp\": \"2026-11-18T13:49:19.338Z\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"QA2FD8F834FC-bad-merchant\", \"card_holder_id\": \"QA2FD8F834FC-invalid\", \"amount\": 125.25, \"location\": \"Casablanca\", \"merchant_type\": \" \", \"timestamp\": \"2026-11-18T12:44:30.000Z\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"QA2FD8F834FC-bad-missing\", \"card_holder_id\": \"QA2FD8F834FC-invalid\", \"amount\": 125.25, \"merchant_type\": \"Électronique\", \"timestamp\": \"2026-11-18T12:44:30.000Z\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\":\"PANNE193-BAD\",\"card_holder_id\":\"PANNE193-C2\",\"amount\":-1,\"location\":\"Rabat\",\"merchant_type\":\"Test\",\"timestamp\":\"2026-11-18T12:54:51Z\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"QA01B80FF9D6-bad-city\", \"card_holder_id\": \"QA01B80FF9D6-invalid\", \"amount\": 125.25, \"location\": \"Inconnue\", \"merchant_type\": \"Électronique\", \"timestamp\": \"2026-11-18T13:06:30.000Z\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"QA01B80FF9D6-bad-amount\", \"card_holder_id\": \"QA01B80FF9D6-invalid\", \"amount\": -1, \"location\": \"Casablanca\", \"merchant_type\": \"Électronique\", \"timestamp\": \"2026-11-18T13:06:30.000Z\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"QA01B80FF9D6-bad-decimal\", \"card_holder_id\": \"QA01B80FF9D6-invalid\", \"amount\": 12.345, \"location\": \"Casablanca\", \"merchant_type\": \"Électronique\", \"timestamp\": \"2026-11-18T13:06:30.000Z\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"QA01B80FF9D6-bad-bool\", \"card_holder_id\": \"QA01B80FF9D6-invalid\", \"amount\": true, \"location\": \"Casablanca\", \"merchant_type\": \"Électronique\", \"timestamp\": \"2026-11-18T13:06:30.000Z\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"QA01B80FF9D6-bad-time\", \"card_holder_id\": \"QA01B80FF9D6-invalid\", \"amount\": 125.25, \"location\": \"Casablanca\", \"merchant_type\": \"Électronique\", \"timestamp\": \"2026-11-17T10:00:00\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"QA01B80FF9D6-bad-future\", \"card_holder_id\": \"QA01B80FF9D6-invalid\", \"amount\": 125.25, \"location\": \"Casablanca\", \"merchant_type\": \"Électronique\", \"timestamp\": \"2026-11-18T14:11:19.042Z\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"QA01B80FF9D6-bad-merchant\", \"card_holder_id\": \"QA01B80FF9D6-invalid\", \"amount\": 125.25, \"location\": \"Casablanca\", \"merchant_type\": \" \", \"timestamp\": \"2026-11-18T13:06:30.000Z\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"QA01B80FF9D6-bad-missing\", \"card_holder_id\": \"QA01B80FF9D6-invalid\", \"amount\": 125.25, \"merchant_type\": \"Électronique\", \"timestamp\": \"2026-11-18T13:06:30.000Z\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"P2-D71DF0-04\", \"card_holder_id\": \"P2C-D71DF0-04\", \"amount\": 150.0, \"location\": \"Casablanca\", \"merchant_type\": \"Alimentation\", \"timestamp\": \"2026-11-18T14:34:22Z\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"P2-D71DF0-10\", \"card_holder_id\": \"P2C-D71DF0-10\", \"amount\": 150.0, \"location\": \"Casablanca\", \"merchant_type\": \"Alimentation\", \"timestamp\": \"2026-11-18T14:28Z\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"P2-D71DF0-05\", \"card_holder_id\": \"P2C-D71DF0-05\", \"amount\": 150.0, \"location\": \"Casablanca\", \"merchant_type\": \"Alimentation\", \"timestamp\": \"20261118T142822Z\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"P2-D71DF0-09\", \"card_holder_id\": \"P2C-D71DF0-09\", \"amount\": 150.0, \"location\": \"Casablanca\", \"merchant_type\": \"Alimentation\", \"timestamp\": \"2026-11-18T14:28:22z\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"P2-D71DF0-19\", \"card_holder_id\": \"P2C-D71DF0-19\", \"amount\": 150.0, \"location\": \"Casablanca\", \"merchant_type\": \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\", \"timestamp\": \"2026-11-18T14:28:22Z\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"P2-D71DF0-01\", \"card_holder_id\": \"P2C-D71DF0-01\", \"amount\": 150.0, \"location\": \"Casablanca\", \"merchant_type\": \"Alimentation\", \"timestamp\": \"2026-11-18 14:28:22Z\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"P2-D71DF0-02\", \"card_holder_id\": \"P2C-D71DF0-02\", \"amount\": 150.0, \"location\": \"Casablanca\", \"merchant_type\": \"Alimentation\", \"timestamp\": \"2026-12-18T14:28:22Z\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"P2-D71DF0-06\", \"card_holder_id\": \"P2C-D71DF0-06\", \"amount\": 150.0, \"location\": \"Casablanca\", \"merchant_type\": \"Alimentation\", \"timestamp\": \"2026-11-18T15:28:22+0100\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"P2-D71DF0-08\", \"card_holder_id\": \"P2C-D71DF0-08\", \"amount\": 150.0, \"location\": \"Casablanca\", \"merchant_type\": \"Alimentation\", \"timestamp\": \"2026-11-18T15:28:22+01\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"P2-D71DF0-13\", \"card_holder_id\": \"P2C-D71DF0-13\", \"amount\": 150.0, \"location\": \"Casablanca\", \"merchant_type\": \"Alimentation\", \"timestamp\": \"2026-11-18T14:28:22\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"P2-D71DF0-18\", \"card_holder_id\": \"P2C-D71DF0-18\", \"amount\": 150.0, \"location\": \"casablanca\", \"merchant_type\": \"Alimentation\", \"timestamp\": \"2026-11-18T14:28:22Z\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"P2-8C9806-01\", \"card_holder_id\": \"P2C-8C9806-01\", \"amount\": 150.0, \"location\": \"Casablanca\", \"merchant_type\": \"Alimentation\", \"timestamp\": \"2026-11-18 14:29:29Z\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"P2-8C9806-10\", \"card_holder_id\": \"P2C-8C9806-10\", \"amount\": 150.0, \"location\": \"Casablanca\", \"merchant_type\": \"Alimentation\", \"timestamp\": \"2026-11-18T14:29Z\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"P2-8C9806-02\", \"card_holder_id\": \"P2C-8C9806-02\", \"amount\": 150.0, \"location\": \"Casablanca\", \"merchant_type\": \"Alimentation\", \"timestamp\": \"2026-12-18T14:29:29Z\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"P2-8C9806-05\", \"card_holder_id\": \"P2C-8C9806-05\", \"amount\": 150.0, \"location\": \"Casablanca\", \"merchant_type\": \"Alimentation\", \"timestamp\": \"20261118T142929Z\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"P2-8C9806-06\", \"card_holder_id\": \"P2C-8C9806-06\", \"amount\": 150.0, \"location\": \"Casablanca\", \"merchant_type\": \"Alimentation\", \"timestamp\": \"2026-11-18T15:29:29+0100\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"P2-8C9806-09\", \"card_holder_id\": \"P2C-8C9806-09\", \"amount\": 150.0, \"location\": \"Casablanca\", \"merchant_type\": \"Alimentation\", \"timestamp\": \"2026-11-18T14:29:29z\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"P2-8C9806-28\", \"card_holder_id\": \"P2C-8C9806-28\", \"amount\": 150.0, \"location\": \"Casablanca\", \"merchant_type\": \"Alimentation\", \"timestamp\": \"2026-02-30T10:00:00Z\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"P2-8C9806-29\", \"card_holder_id\": \"P2C-8C9806-29\", \"amount\": 150.0, \"location\": \"Casablanca\", \"merchant_type\": \"Alimentation\", \"timestamp\": \"2026-11-18T10:00:60Z\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"P2-8C9806-19\", \"card_holder_id\": \"P2C-8C9806-19\", \"amount\": 150.0, \"location\": \"Casablanca\", \"merchant_type\": \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\", \"timestamp\": \"2026-11-18T14:29:29Z\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"P2-8C9806-27\", \"card_holder_id\": \"P2C-8C9806-27\", \"amount\": 150.0, \"location\": \"Casablanca\", \"merchant_type\": \"Alimentation\", \"timestamp\": \"2026-11-17T24:00:00Z\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"P2-8C9806-04\", \"card_holder_id\": \"P2C-8C9806-04\", \"amount\": 150.0, \"location\": \"Casablanca\", \"merchant_type\": \"Alimentation\", \"timestamp\": \"2026-11-18T14:35:29Z\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"P2-8C9806-08\", \"card_holder_id\": \"P2C-8C9806-08\", \"amount\": 150.0, \"location\": \"Casablanca\", \"merchant_type\": \"Alimentation\", \"timestamp\": \"2026-11-18T15:29:29+01\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"P2-8C9806-13\", \"card_holder_id\": \"P2C-8C9806-13\", \"amount\": 150.0, \"location\": \"Casablanca\", \"merchant_type\": \"Alimentation\", \"timestamp\": \"2026-11-18T14:29:29\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"P2-8C9806-18\", \"card_holder_id\": \"P2C-8C9806-18\", \"amount\": 150.0, \"location\": \"casablanca\", \"merchant_type\": \"Alimentation\", \"timestamp\": \"2026-11-18T14:29:29Z\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"P2-8C9806-31\", \"card_holder_id\": \"P2C-8C9806-31\", \"amount\": 150.0, \"location\": \"Casablanca\", \"merchant_type\": \"Alimentation\", \"timestamp\": 1763470000}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"P2-9EDF12-04\", \"card_holder_id\": \"P2C-9EDF12-04\", \"amount\": 150.0, \"location\": \"Casablanca\", \"merchant_type\": \"Alimentation\", \"timestamp\": \"2026-11-18T14:38:20Z\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"P2-9EDF12-02\", \"card_holder_id\": \"P2C-9EDF12-02\", \"amount\": 150.0, \"location\": \"Casablanca\", \"merchant_type\": \"Alimentation\", \"timestamp\": \"2026-12-18T14:32:20Z\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"P2-9EDF12-09\", \"card_holder_id\": \"P2C-9EDF12-09\", \"amount\": 150.0, \"location\": \"Casablanca\", \"merchant_type\": \"Alimentation\", \"timestamp\": \"2026-11-18T14:32:20z\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"P2-9EDF12-06\", \"card_holder_id\": \"P2C-9EDF12-06\", \"amount\": 150.0, \"location\": \"Casablanca\", \"merchant_type\": \"Alimentation\", \"timestamp\": \"2026-11-18T15:32:20+0100\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"P2-9EDF12-13\", \"card_holder_id\": \"P2C-9EDF12-13\", \"amount\": 150.0, \"location\": \"Casablanca\", \"merchant_type\": \"Alimentation\", \"timestamp\": \"2026-11-18T14:32:20\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"P2-9EDF12-27\", \"card_holder_id\": \"P2C-9EDF12-27\", \"amount\": 150.0, \"location\": \"Casablanca\", \"merchant_type\": \"Alimentation\", \"timestamp\": \"2026-11-17T24:00:00Z\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"P2-9EDF12-18\", \"card_holder_id\": \"P2C-9EDF12-18\", \"amount\": 150.0, \"location\": \"casablanca\", \"merchant_type\": \"Alimentation\", \"timestamp\": \"2026-11-18T14:32:20Z\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"P2-9EDF12-31\", \"card_holder_id\": \"P2C-9EDF12-31\", \"amount\": 150.0, \"location\": \"Casablanca\", \"merchant_type\": \"Alimentation\", \"timestamp\": 1763470000}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"P2-9EDF12-28\", \"card_holder_id\": \"P2C-9EDF12-28\", \"amount\": 150.0, \"location\": \"Casablanca\", \"merchant_type\": \"Alimentation\", \"timestamp\": \"2026-02-30T10:00:00Z\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"P2-9EDF12-01\", \"card_holder_id\": \"P2C-9EDF12-01\", \"amount\": 150.0, \"location\": \"Casablanca\", \"merchant_type\": \"Alimentation\", \"timestamp\": \"2026-11-18 14:32:20Z\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"P2-9EDF12-05\", \"card_holder_id\": \"P2C-9EDF12-05\", \"amount\": 150.0, \"location\": \"Casablanca\", \"merchant_type\": \"Alimentation\", \"timestamp\": \"20261118T143220Z\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"P2-9EDF12-08\", \"card_holder_id\": \"P2C-9EDF12-08\", \"amount\": 150.0, \"location\": \"Casablanca\", \"merchant_type\": \"Alimentation\", \"timestamp\": \"2026-11-18T15:32:20+01\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"P2-9EDF12-10\", \"card_holder_id\": \"P2C-9EDF12-10\", \"amount\": 150.0, \"location\": \"Casablanca\", \"merchant_type\": \"Alimentation\", \"timestamp\": \"2026-11-18T14:32Z\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"P2-9EDF12-19\", \"card_holder_id\": \"P2C-9EDF12-19\", \"amount\": 150.0, \"location\": \"Casablanca\", \"merchant_type\": \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\", \"timestamp\": \"2026-11-18T14:32:20Z\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"P2-9EDF12-29\", \"card_holder_id\": \"P2C-9EDF12-29\", \"amount\": 150.0, \"location\": \"Casablanca\", \"merchant_type\": \"Alimentation\", \"timestamp\": \"2026-11-18T10:00:60Z\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"QA35655D7FE3-bad-city\", \"card_holder_id\": \"QA35655D7FE3-invalid\", \"amount\": 125.25, \"location\": \"Inconnue\", \"merchant_type\": \"Électronique\", \"timestamp\": \"2026-11-18T14:28:30.000Z\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"QA35655D7FE3-bad-amount\", \"card_holder_id\": \"QA35655D7FE3-invalid\", \"amount\": -1, \"location\": \"Casablanca\", \"merchant_type\": \"Électronique\", \"timestamp\": \"2026-11-18T14:28:30.000Z\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"QA35655D7FE3-bad-decimal\", \"card_holder_id\": \"QA35655D7FE3-invalid\", \"amount\": 12.345, \"location\": \"Casablanca\", \"merchant_type\": \"Électronique\", \"timestamp\": \"2026-11-18T14:28:30.000Z\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"QA35655D7FE3-bad-bool\", \"card_holder_id\": \"QA35655D7FE3-invalid\", \"amount\": true, \"location\": \"Casablanca\", \"merchant_type\": \"Électronique\", \"timestamp\": \"2026-11-18T14:28:30.000Z\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"QA35655D7FE3-bad-time\", \"card_holder_id\": \"QA35655D7FE3-invalid\", \"amount\": 125.25, \"location\": \"Casablanca\", \"merchant_type\": \"Électronique\", \"timestamp\": \"2026-11-17T10:00:00\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"QA35655D7FE3-bad-future\", \"card_holder_id\": \"QA35655D7FE3-invalid\", \"amount\": 125.25, \"location\": \"Casablanca\", \"merchant_type\": \"Électronique\", \"timestamp\": \"2026-11-18T15:33:14.096Z\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"QA35655D7FE3-bad-merchant\", \"card_holder_id\": \"QA35655D7FE3-invalid\", \"amount\": 125.25, \"location\": \"Casablanca\", \"merchant_type\": \" \", \"timestamp\": \"2026-11-18T14:28:30.000Z\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"QA35655D7FE3-bad-missing\", \"card_holder_id\": \"QA35655D7FE3-invalid\", \"amount\": 125.25, \"merchant_type\": \"Électronique\", \"timestamp\": \"2026-11-18T14:28:30.000Z\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"QAFCAC8F49A7-bad-city\", \"card_holder_id\": \"QAFCAC8F49A7-invalid\", \"amount\": 125.25, \"location\": \"Inconnue\", \"merchant_type\": \"Électronique\", \"timestamp\": \"2026-11-18T15:58:30.000Z\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"QAFCAC8F49A7-bad-amount\", \"card_holder_id\": \"QAFCAC8F49A7-invalid\", \"amount\": -1, \"location\": \"Casablanca\", \"merchant_type\": \"Électronique\", \"timestamp\": \"2026-11-18T15:58:30.000Z\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"QAFCAC8F49A7-bad-decimal\", \"card_holder_id\": \"QAFCAC8F49A7-invalid\", \"amount\": 12.345, \"location\": \"Casablanca\", \"merchant_type\": \"Électronique\", \"timestamp\": \"2026-11-18T15:58:30.000Z\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"QAFCAC8F49A7-bad-bool\", \"card_holder_id\": \"QAFCAC8F49A7-invalid\", \"amount\": true, \"location\": \"Casablanca\", \"merchant_type\": \"Électronique\", \"timestamp\": \"2026-11-18T15:58:30.000Z\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"QAFCAC8F49A7-bad-time\", \"card_holder_id\": \"QAFCAC8F49A7-invalid\", \"amount\": 125.25, \"location\": \"Casablanca\", \"merchant_type\": \"Électronique\", \"timestamp\": \"2026-11-17T10:00:00\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"QAFCAC8F49A7-bad-future\", \"card_holder_id\": \"QAFCAC8F49A7-invalid\", \"amount\": 125.25, \"location\": \"Casablanca\", \"merchant_type\": \"Électronique\", \"timestamp\": \"2026-11-18T17:02:15.148Z\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"QAFCAC8F49A7-bad-merchant\", \"card_holder_id\": \"QAFCAC8F49A7-invalid\", \"amount\": 125.25, \"location\": \"Casablanca\", \"merchant_type\": \" \", \"timestamp\": \"2026-11-18T15:58:30.000Z\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  },
+  {
+    "raw": "{\"transaction_id\": \"QAFCAC8F49A7-bad-missing\", \"card_holder_id\": \"QAFCAC8F49A7-invalid\", \"amount\": 125.25, \"merchant_type\": \"Électronique\", \"timestamp\": \"2026-11-18T15:58:30.000Z\"}",
+    "reason": "Contrat invalide, ville inconnue ou horodatage futur de plus de 5 minutes."
+  }
+]

@@ -1,0 +1,288 @@
+{
+  "prefix": "QAFCAC8F49A7",
+  "events": [
+    {
+      "transaction_id": "QAFCAC8F49A7-amount-equal",
+      "card_holder_id": "QAFCAC8F49A7-amount-equal",
+      "amount": 10000,
+      "location": "Casablanca",
+      "merchant_type": "Électronique",
+      "timestamp": "2026-11-18T15:58:30.000Z"
+    },
+    {
+      "transaction_id": "QAFCAC8F49A7-amount-above",
+      "card_holder_id": "QAFCAC8F49A7-amount-above",
+      "amount": 10000.01,
+      "location": "Casablanca",
+      "merchant_type": "Électronique",
+      "timestamp": "2026-11-18T15:58:30.000Z"
+    },
+    {
+      "transaction_id": "QAFCAC8F49A7-travel120-b",
+      "card_holder_id": "QAFCAC8F49A7-travel120",
+      "amount": 125.25,
+      "location": "Tanger",
+      "merchant_type": "Électronique",
+      "timestamp": "2026-11-18T16:00:00.000Z"
+    },
+    {
+      "transaction_id": "QAFCAC8F49A7-travel120-a",
+      "card_holder_id": "QAFCAC8F49A7-travel120",
+      "amount": 125.25,
+      "location": "Casablanca",
+      "merchant_type": "Électronique",
+      "timestamp": "2026-11-18T15:58:00.000Z"
+    },
+    {
+      "transaction_id": "QAFCAC8F49A7-travel-over-a",
+      "card_holder_id": "QAFCAC8F49A7-travel-over",
+      "amount": 125.25,
+      "location": "Casablanca",
+      "merchant_type": "Électronique",
+      "timestamp": "2026-11-18T15:58:00.000Z"
+    },
+    {
+      "transaction_id": "QAFCAC8F49A7-travel-over-b",
+      "card_holder_id": "QAFCAC8F49A7-travel-over",
+      "amount": 125.25,
+      "location": "Tanger",
+      "merchant_type": "Électronique",
+      "timestamp": "2026-11-18T16:00:00.001Z"
+    },
+    {
+      "transaction_id": "QAFCAC8F49A7-same-a",
+      "card_holder_id": "QAFCAC8F49A7-same",
+      "amount": 125.25,
+      "location": "Casablanca",
+      "merchant_type": "Électronique",
+      "timestamp": "2026-11-18T15:58:10.000Z"
+    },
+    {
+      "transaction_id": "QAFCAC8F49A7-same-b",
+      "card_holder_id": "QAFCAC8F49A7-same",
+      "amount": 125.25,
+      "location": "Casablanca",
+      "merchant_type": "Électronique",
+      "timestamp": "2026-11-18T15:58:50.000Z"
+    },
+    {
+      "transaction_id": "QAFCAC8F49A7-simultaneous-b",
+      "card_holder_id": "QAFCAC8F49A7-simultaneous",
+      "amount": 125.25,
+      "location": "Tanger",
+      "merchant_type": "Électronique",
+      "timestamp": "2026-11-18T15:58:30.000Z"
+    },
+    {
+      "transaction_id": "QAFCAC8F49A7-simultaneous-a",
+      "card_holder_id": "QAFCAC8F49A7-simultaneous",
+      "amount": 125.25,
+      "location": "Casablanca",
+      "merchant_type": "Électronique",
+      "timestamp": "2026-11-18T15:58:30.000Z"
+    },
+    {
+      "transaction_id": "QAFCAC8F49A7-independent-a",
+      "card_holder_id": "QAFCAC8F49A7-client-a",
+      "amount": 125.25,
+      "location": "Casablanca",
+      "merchant_type": "Électronique",
+      "timestamp": "2026-11-18T15:58:10.000Z"
+    },
+    {
+      "transaction_id": "QAFCAC8F49A7-independent-b",
+      "card_holder_id": "QAFCAC8F49A7-client-b",
+      "amount": 125.25,
+      "location": "Tanger",
+      "merchant_type": "Électronique",
+      "timestamp": "2026-11-18T15:58:20.000Z"
+    },
+    {
+      "transaction_id": "QAFCAC8F49A7-frequency-c",
+      "card_holder_id": "QAFCAC8F49A7-frequency",
+      "amount": 125.25,
+      "location": "Casablanca",
+      "merchant_type": "Électronique",
+      "timestamp": "2026-11-18T15:58:50.000Z"
+    },
+    {
+      "transaction_id": "QAFCAC8F49A7-frequency-a",
+      "card_holder_id": "QAFCAC8F49A7-frequency",
+      "amount": 125.25,
+      "location": "Casablanca",
+      "merchant_type": "Électronique",
+      "timestamp": "2026-11-18T15:58:10.000Z"
+    },
+    {
+      "transaction_id": "QAFCAC8F49A7-frequency-b",
+      "card_holder_id": "QAFCAC8F49A7-frequency",
+      "amount": 125.25,
+      "location": "Casablanca",
+      "merchant_type": "Électronique",
+      "timestamp": "2026-11-18T15:58:20.000Z"
+    },
+    {
+      "transaction_id": "QAFCAC8F49A7-boundary-a",
+      "card_holder_id": "QAFCAC8F49A7-boundary",
+      "amount": 125.25,
+      "location": "Casablanca",
+      "merchant_type": "Électronique",
+      "timestamp": "2026-11-18T15:59:58.000Z"
+    },
+    {
+      "transaction_id": "QAFCAC8F49A7-boundary-b",
+      "card_holder_id": "QAFCAC8F49A7-boundary",
+      "amount": 125.25,
+      "location": "Casablanca",
+      "merchant_type": "Électronique",
+      "timestamp": "2026-11-18T15:59:59.000Z"
+    },
+    {
+      "transaction_id": "QAFCAC8F49A7-boundary-c",
+      "card_holder_id": "QAFCAC8F49A7-boundary",
+      "amount": 125.25,
+      "location": "Casablanca",
+      "merchant_type": "Électronique",
+      "timestamp": "2026-11-18T16:00:00.000Z"
+    },
+    {
+      "transaction_id": "QAFCAC8F49A7-accent",
+      "card_holder_id": "QAFCAC8F49A7-accent",
+      "amount": 125.25,
+      "location": "Fès",
+      "merchant_type": "Électronique",
+      "timestamp": "2026-11-18T15:58:30.000Z"
+    },
+    {
+      "transaction_id": "QAFCAC8F49A7-frequency-d",
+      "card_holder_id": "QAFCAC8F49A7-frequency",
+      "amount": 125.25,
+      "location": "Casablanca",
+      "merchant_type": "Électronique",
+      "timestamp": "2026-11-18T15:58:55.000Z"
+    },
+    {
+      "transaction_id": "QAFCAC8F49A7-probe-f9e97554",
+      "card_holder_id": "QAFCAC8F49A7-probe-f9e97554",
+      "amount": 14500,
+      "location": "Fès",
+      "merchant_type": "Bijouterie",
+      "timestamp": "2026-11-18T16:04:06.083Z"
+    }
+  ],
+  "invalid": [
+    {
+      "transaction_id": "QAFCAC8F49A7-bad-city",
+      "card_holder_id": "QAFCAC8F49A7-invalid",
+      "amount": 125.25,
+      "location": "Inconnue",
+      "merchant_type": "Électronique",
+      "timestamp": "2026-11-18T15:58:30.000Z"
+    },
+    {
+      "transaction_id": "QAFCAC8F49A7-bad-amount",
+      "card_holder_id": "QAFCAC8F49A7-invalid",
+      "amount": -1,
+      "location": "Casablanca",
+      "merchant_type": "Électronique",
+      "timestamp": "2026-11-18T15:58:30.000Z"
+    },
+    {
+      "transaction_id": "QAFCAC8F49A7-bad-decimal",
+      "card_holder_id": "QAFCAC8F49A7-invalid",
+      "amount": 12.345,
+      "location": "Casablanca",
+      "merchant_type": "Électronique",
+      "timestamp": "2026-11-18T15:58:30.000Z"
+    },
+    {
+      "transaction_id": "QAFCAC8F49A7-bad-bool",
+      "card_holder_id": "QAFCAC8F49A7-invalid",
+      "amount": true,
+      "location": "Casablanca",
+      "merchant_type": "Électronique",
+      "timestamp": "2026-11-18T15:58:30.000Z"
+    },
+    {
+      "transaction_id": "QAFCAC8F49A7-bad-time",
+      "card_holder_id": "QAFCAC8F49A7-invalid",
+      "amount": 125.25,
+      "location": "Casablanca",
+      "merchant_type": "Électronique",
+      "timestamp": "2026-11-17T10:00:00"
+    },
+    {
+      "transaction_id": "QAFCAC8F49A7-bad-future",
+      "card_holder_id": "QAFCAC8F49A7-invalid",
+      "amount": 125.25,
+      "location": "Casablanca",
+      "merchant_type": "Électronique",
+      "timestamp": "2026-11-18T17:02:15.148Z"
+    },
+    {
+      "transaction_id": "QAFCAC8F49A7-bad-merchant",
+      "card_holder_id": "QAFCAC8F49A7-invalid",
+      "amount": 125.25,
+      "location": "Casablanca",
+      "merchant_type": " ",
+      "timestamp": "2026-11-18T15:58:30.000Z"
+    },
+    {
+      "transaction_id": "QAFCAC8F49A7-bad-missing",
+      "card_holder_id": "QAFCAC8F49A7-invalid",
+      "amount": 125.25,
+      "merchant_type": "Électronique",
+      "timestamp": "2026-11-18T15:58:30.000Z"
+    }
+  ],
+  "update": {
+    "transaction_id": "QAFCAC8F49A7-frequency-d",
+    "card_holder_id": "QAFCAC8F49A7-frequency",
+    "amount": 125.25,
+    "location": "Casablanca",
+    "merchant_type": "Électronique",
+    "timestamp": "2026-11-18T15:58:55.000Z"
+  },
+  "created_at": "2026-11-18T16:02:15.148Z",
+  "checks": [
+    {
+      "at": "2026-11-18T16:03:00.795Z",
+      "transactions": 19,
+      "alerts": 4,
+      "invalid": 8,
+      "verification_seconds": 43.83,
+      "phase": "initial",
+      "result": "PASS"
+    },
+    {
+      "at": "2026-11-18T16:03:35.697Z",
+      "transactions": 20,
+      "alerts": 4,
+      "invalid": 8,
+      "verification_seconds": 32.987,
+      "phase": "frequency-update",
+      "result": "PASS"
+    },
+    {
+      "at": "2026-11-18T16:04:05.841Z",
+      "transactions": 20,
+      "alerts": 4,
+      "invalid": 8,
+      "verification_seconds": 28.118,
+      "phase": "replay",
+      "result": "PASS"
+    },
+    {
+      "at": "2026-11-18T16:04:40.830Z",
+      "transactions": 21,
+      "alerts": 5,
+      "invalid": 8,
+      "verification_seconds": 33.069,
+      "phase": "recovery",
+      "result": "PASS"
+    }
+  ],
+  "published_at": "2026-11-18T16:02:16.734Z",
+  "producer_seconds": 1.585,
+  "phase": "recovery"
+}
