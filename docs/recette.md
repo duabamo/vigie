@@ -25,6 +25,18 @@ Le test HTTP utilise un port éphémère sur l’interface locale et un fichier 
 
 ## Recette du cluster
 
+### Premier démarrage après la correction de l’ingestion
+
+Un nouveau clone peut suivre la procédure de démarrage habituelle. Si l’ancienne version du job a déjà été soumise, arrêter ce job et ses services, puis démarrer la nouvelle version avec un nom de projet Compose distinct. Les anciens volumes restent disponibles pour consultation.
+
+Dans chaque terminal utilisé pour le nouveau cluster, définir le même nom de projet avant de lancer les commandes, le producteur, la recette ou la console.
+
+```bash
+export COMPOSE_PROJECT_NAME=vigie-v2
+```
+
+Sous PowerShell, utiliser `$env:COMPOSE_PROJECT_NAME = 'vigie-v2'`. Le jeu de recette doit être republié dans le nouveau projet pour vérifier les résultats.
+
 ### Vérification automatisée
 
 Après le démarrage des services et du job Spark, lancer depuis la racine :
@@ -38,7 +50,7 @@ python scripts/validate_cluster.py replay
 python scripts/validate_cluster.py check
 ```
 
-Le script publie des transactions identifiées par un préfixe unique. Il vérifie les bornes, les arrivées désordonnées, les doublons, les accents, les rejets, les deux tables d’alertes et le topic Kafka. Les résultats et le manifeste sont conservés dans `.runtime/cluster-validation/`. Il ne supprime aucune donnée ni aucun checkpoint. Le délai de vérification est réglable avec `--timeout`.
+Le script publie des transactions identifiées par un préfixe unique. Il vérifie notamment le trajet à 120,0005 secondes, la réémission d’un identifiant avec des données différentes et le rejet de l’heure `24:00:00`. Dans Cassandra, il compare les champs des transactions, leurs clés de stockage et le nombre de lignes par identifiant, ainsi que les alertes des deux tables. Il vérifie aussi les sorties Kafka. Le manifeste et les résultats sont conservés dans `.runtime/cluster-validation/`. Le délai est réglable avec `--timeout`.
 
 Après un redémarrage du job conservant ses checkpoints, lancer `python scripts/validate_cluster.py probe`, puis `python scripts/validate_cluster.py check`. Cette séquence vérifie la présence des alertes antérieures et le traitement d’une nouvelle transaction. Le script ne démarre ni n’arrête les services lui-même. Les journaux du job contiennent désormais des entrées `PROGRESS` pour les micro-lots, leur durée, le débit et l’état des opérateurs.
 
@@ -62,7 +74,7 @@ Attendu : les trois topics et les trois tables du schéma.
 
 ### B. Soumission et première alerte
 
-Dans un terminal, lancer `bash submit.sh`. Vérifier l’application sur http://127.0.0.1:4040 et ses cinq requêtes de streaming. Dans un autre terminal :
+Dans un terminal, lancer `bash submit.sh`. Vérifier l’application sur http://127.0.0.1:4040 et ses six requêtes de streaming. Dans un autre terminal :
 
 ```bash
 python3 producer.py --kafka --scenario montant --count 1
@@ -87,7 +99,7 @@ Pour tester les bornes, produire des messages JSON spécifiques avec les six cha
 | Montant = 10 000 DH | Pas d’alerte de montant |
 | Montant = 10 000,01 DH | Une alerte de montant |
 | Deux villes éloignées, même client, intervalle = 120 s | Alerte de déplacement |
-| Même paire, intervalle = 120,001 s | Pas d’alerte de déplacement |
+| Même paire, intervalle = 120,0005 s | Pas d’alerte de déplacement |
 | Trois identifiants distincts, même client, même fenêtre | Une alerte de fréquence |
 | Troisième transaction dans la fenêtre suivante | Pas d’alerte pour la fenêtre incomplète |
 | Même identifiant de transaction réémis | Pas de nouvelle identité d’alerte ; fréquence distincte inchangée |
@@ -95,11 +107,13 @@ Pour tester les bornes, produire des messages JSON spécifiques avec les six cha
 
 Pour les arrivées désordonnées, publier l’événement le plus récent avant le plus ancien. Rester dans la tolérance du watermark ; vérifier la conservation de l’ordre chronologique dans l’alerte.
 
+Pour vérifier le point de référence du filtre d’horodatage, arrêter le job et publier une transaction de 14 500 DH datée de six minutes dans le futur. Confirmer avec l’option consommateur Kafka `--property print.timestamp=true` que la date de la transaction dépasse l’heure d’arrivée Kafka de plus de cinq minutes. Attendre que l’écart avec l’heure courante soit inférieur à cinq minutes, puis relancer le job. Cet identifiant doit apparaître uniquement dans `invalid-transactions`.
+
 ### D. Reprise et idempotence
 
 1. Produire une série, attendre son apparition dans Cassandra et noter les identifiants d’alerte.
 2. Arrêter le job avec `Ctrl+C`, conserver tous les volumes, puis relancer `bash submit.sh`.
-3. Vérifier la reprise des cinq requêtes et l’absence d’augmentation des identités déjà présentes dans Cassandra.
+3. Vérifier la reprise des six requêtes et l’absence d’augmentation des identités déjà présentes dans Cassandra.
 4. Récréer le worker avec `docker compose up -d --force-recreate spark-worker`, puis attendre son enregistrement et vérifier la reprise de traitement. Le volume de checkpoints doit être monté sur le driver et le worker.
 5. Produire une nouvelle série et vérifier sa persistance.
 

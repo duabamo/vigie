@@ -17,6 +17,7 @@ from urllib.request import Request, urlopen
 import fraud_core
 from app import Server, snapshot
 from fraud_core import CITIES, UTC, Generator, alert_id, detect, distance_km, iso, parse_time, validate_transaction
+from scripts import validate_cluster
 from storage import ClusterSource, DemoSource, Store
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -56,7 +57,7 @@ class RuleTests(unittest.TestCase):
     def test_timezone_required_and_normalized(self):
         with self.assertRaises(ValueError):
             parse_time("2026-10-06T09:00:00")
-        self.assertEqual(iso(parse_time("2026-10-06T09:00:00+01:00")), "2026-10-06T08:00:00.000Z")
+        self.assertEqual(iso(parse_time("2026-10-06T09:00:00+01:00")), "2026-10-06T08:00:00.000000Z")
 
     def test_travel_symmetric_under_arrival_order(self):
         a, b = self.generator.scenario("voyage", self.time)
@@ -160,9 +161,26 @@ class StoreTests(unittest.TestCase):
     def test_duplicate_transaction_is_not_counted(self):
         tx = self.generator.transaction(self.now, amount=14500)
         self.store.ingest(tx)
-        self.assertEqual(self.store.ingest(tx), [])
+        duplicate = {**tx, "timestamp": iso(self.now + timedelta(seconds=1)), "amount": 15000, "location": "Tanger"}
+        self.assertEqual(self.store.ingest(duplicate), [])
         self.assertEqual(len(self.rows("transactions")), 1)
+        self.assertEqual(self.rows("transactions")[0], tx)
         self.assertEqual(len(self.rows("alerts")), 1)
+
+    def test_store_uses_microseconds_and_preserves_legacy_rows(self):
+        a, b = self.generator.scenario("voyage", self.now)
+        b["timestamp"] = "2026-10-06T08:57:00.123Z"
+        a["timestamp"] = "2026-10-06T08:55:00.122500Z"
+        with self.store.connect() as db:
+            db.execute("INSERT INTO transactions VALUES (?,?,?,?)",
+                       (b["transaction_id"], b["card_holder_id"], b["timestamp"], json.dumps(b)))
+            db.execute("PRAGMA user_version = 0")
+        reopened = Store(self.store.path)
+        self.assertEqual(reopened.ingest(a), [])
+        same_time = reopened.rows("transactions", b["timestamp"], b["timestamp"])
+        self.assertEqual([tx["timestamp"] for tx in same_time], ["2026-10-06T08:57:00.123000Z"])
+        with reopened.connect() as db:
+            self.assertEqual(db.execute("SELECT COUNT(*) FROM alerts").fetchone()[0], 0)
 
     def test_alert_upsert_and_review_survive_reopen(self):
         a, b, c = self.generator.scenario("frequence", self.now)
@@ -493,7 +511,21 @@ class SharedThresholdTests(unittest.TestCase):
         self.assertEqual(fraud_core.frequency_detail(3), "3 transactions dans une fenêtre fixe de 2 minutes.")
         self.assertEqual(streaming_cassandra.sql_interval(fraud_core.FUTURE_TOLERANCE_SECONDS), "INTERVAL 5 MINUTES")
         self.assertEqual(fraud_core.window_label(fraud_core.FUTURE_TOLERANCE_SECONDS), "5 minutes")
-        self.assertEqual(fraud_core.TIMESTAMP_PATTERN, r"^\d{4}-\d{2}-\d{2}T.*(?:Z|[+-]\d{2}:\d{2})$")
+        self.assertIn("TIMESTAMP_PATTERN", (ROOT / "streaming_cassandra.py").read_text(encoding="utf-8"))
+
+    def test_legacy_stream_checkpoint_is_detected_without_rewriting_it(self):
+        from streaming_cassandra import checkpoint_paths
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.assertEqual(tuple(map(Path, checkpoint_paths(directory))),
+                             (root / "v2", root / "v2" / "transactions-acceptees"))
+            legacy = root / "transactions" / "metadata"
+            legacy.parent.mkdir()
+            legacy.write_text("legacy", encoding="utf-8")
+            with self.assertRaisesRegex(RuntimeError, "Anciens checkpoints"):
+                checkpoint_paths(directory)
+            self.assertEqual(legacy.read_text(encoding="utf-8"), "legacy")
 
     def test_default_thresholds_are_unchanged(self):
         self.assertEqual((fraud_core.AMOUNT_THRESHOLD, fraud_core.WINDOW_SECONDS, fraud_core.TRAVEL_MAX_SECONDS,
@@ -537,7 +569,7 @@ class MinorFixesTests(unittest.TestCase):
 
 
 class TimestampContractTests(unittest.TestCase):
-    """Verdicts relevés sur le cluster le 18 novembre 2026 : Python décide comme le filtre Spark."""
+    """Bornes du format partagé et comportement de la démonstration."""
 
     NOW = datetime(2026, 11, 18, 14, 30, tzinfo=UTC)
 
@@ -546,20 +578,29 @@ class TimestampContractTests(unittest.TestCase):
 
     def test_formats_accepted_by_spark(self):
         for value in ("2026-11-18T14:30:00Z", "2026-11-18T15:30:00+01:00", "2026-11-18T09:30:00-05:00",
-                      "2026-11-18T14:30:00+00:00", "2026-11-18T14:30:00.5Z", "2026-11-18T14:30:00.123Z",
-                      "2026-11-18T14:30:00.123456Z", "2026-10-06T08:55:00Z"):
+                      "2026-11-18T14:30:00+00:00", "2026-10-06T08:55:00Z"):
             with self.subTest(value=value):
                 validate_transaction(self.tx(value), now=self.NOW)
+        for digits in range(1, 7):
+            fraction = "123456"[:digits]
+            with self.subTest(fraction=fraction):
+                tx = self.tx(f"2026-11-18T15:30:00.{fraction}+01:00")
+                self.assertEqual(validate_transaction(tx, now=self.NOW)["timestamp"],
+                                 f"2026-11-18T14:30:00.{fraction.ljust(6, '0')}Z")
 
     def test_formats_rejected_by_spark(self):
         for value in ("2026-11-18 14:30:00Z", "20261118T143000Z", "2026-11-18T15:30:00+0100", "2026-11-18T15:30:00+01",
                       "2026-11-18T14:30Z", "2026-11-18T14:30:00z", "2026-11-18T14:30:00", "2026-11-17T24:00:00Z",
-                      "2026-02-30T10:00:00Z", "2026-11-18T10:00:60Z", "٢٠٢٦-11-18T14:30:00Z", 1763470000):
+                      "2026-02-30T10:00:00Z", "2026-11-18T10:00:60Z", "٢٠٢٦-11-18T14:30:00Z", 1763470000,
+                      "2026-11-18T9:05:00Z", "2026-11-18T14:30:00Z\n", "2026-11-18T14:30:00,5Z",
+                      "2026-11-18T14:30:00.1234567Z", "2026-11-18T14:30:00+18:01",
+                      "0000-12-31T23:59:59Z", "0001-01-01T00:00:00+01:00"):
             with self.subTest(value=value), self.assertRaises(ValueError):
                 validate_transaction(self.tx(value), now=self.NOW)
 
     def test_future_tolerance_is_five_minutes(self):
         for delta, accepted in ((timedelta(minutes=4), True), (timedelta(minutes=5), True),
+                                (timedelta(minutes=5, microseconds=1), False),
                                 (timedelta(minutes=5, seconds=1), False), (timedelta(minutes=6), False), (timedelta(days=30), False)):
             tx = self.tx(iso(self.NOW + delta))
             with self.subTest(delta=delta):
@@ -568,6 +609,16 @@ class TimestampContractTests(unittest.TestCase):
                 else:
                     with self.assertRaisesRegex(ValueError, "plus de 5 minutes"):
                         validate_transaction(tx, now=self.NOW)
+
+    def test_travel_checks_precision_after_normalization(self):
+        first = {**self.tx("2026-11-18T14:28:00Z"), "location": "Casablanca"}
+        first = validate_transaction(first, now=self.NOW)
+        for suffix, rules in (("000000", ["VOYAGE_IMPOSSIBLE"]), ("000500", [])):
+            second = {**self.tx(f"2026-11-18T14:30:00.{suffix}Z"), "location": "Tanger"}
+            second = validate_transaction(second, now=self.NOW)
+            with self.subTest(suffix=suffix):
+                self.assertEqual(second["timestamp"], f"2026-11-18T14:30:00.{suffix}Z")
+                self.assertEqual([alert["rule"] for alert in detect(second, [first])], rules)
 
     def test_demo_store_rejects_future_transaction(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -580,6 +631,39 @@ class TimestampContractTests(unittest.TestCase):
             store.ingest(self.tx(iso(datetime.now(UTC))))
             with store.connect() as db:
                 self.assertEqual(db.execute("SELECT COUNT(*) FROM transactions").fetchone()[0], 1)
+
+
+class ClusterValidationTests(unittest.TestCase):
+    def setUp(self):
+        event_time = datetime(2026, 10, 6, 8, 54, 30, 123456, tzinfo=UTC)
+        self.event = Generator(42).transaction(event_time, transaction_id="QA-1", amount=1)
+        self.row = {"transaction_id": "QA-1", "event_date": "2026-10-06",
+                    "timestamp": "2026-10-06 08:54:30.123Z", "payload": json.dumps(self.event)}
+
+    def test_correct_payload_at_cassandra_storage_precision_passes(self):
+        self.assertFalse(any(validate_cluster.transaction_issues([self.event], [self.row]).values()))
+
+    def test_corrupt_payload_or_key_is_reported(self):
+        payloads = ({"amount": 12}, {"amount": True}, {"location": "Inconnue"}, {"merchant_type": "Modifié"},
+                    {"timestamp": "2026-10-06T08:54:30.123000Z"}, {"transaction_id": "QA-2"})
+        corrupt_rows = [{**self.row, "payload": json.dumps({**self.event, **change})} for change in payloads]
+        corrupt_rows.extend(({**self.row, "timestamp": "2026-10-06 08:54:30.124Z"},
+                             {**self.row, "event_date": "2026-10-07"}))
+        for row in corrupt_rows:
+            with self.subTest(row=row):
+                result = validate_cluster.transaction_issues([self.event], [row])
+                self.assertEqual(result["mismatched_transactions"], ["QA-1"])
+
+    def test_cluster_check_fails_when_duplicate_rows_are_returned(self):
+        manifest = {"events": [self.event], "prefix": "QA-", "checks": []}
+        with tempfile.TemporaryDirectory() as directory:
+            folder = Path(directory)
+            with patch.object(validate_cluster, "cql", return_value=[self.row, self.row]), patch("sys.stdout", io.StringIO()):
+                with self.assertRaisesRegex(AssertionError, "Cassandra"):
+                    validate_cluster.check(folder, manifest, timeout=0)
+            failure = json.loads((folder / "failure.json").read_text(encoding="utf-8"))
+            self.assertEqual(failure["transaction_issues"]["duplicate_transactions"], ["QA-1"])
+            self.assertEqual(manifest["checks"], [])
 
 
 class ResilienceTests(unittest.TestCase):

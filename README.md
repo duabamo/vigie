@@ -4,7 +4,7 @@ Console de surveillance des transactions financières et pipeline de détection 
 
 Mini-projet 06 · **Spark Structured Streaming · Kafka · Cassandra**
 
-**Le pipeline Kafka → Spark → Cassandra a été déployé et validé sur Docker Desktop.** [Audit des exigences du sujet](docs/audit.md).
+Le pipeline Kafka → Spark → Cassandra a fait l’objet d’une recette le 18 novembre 2026. Voir le [relevé de validation](docs/validation.md) pour connaître les vérifications disponibles après la correction de l’ingestion.
 
 L’interface, les messages et la documentation sont en français. Les montants sont exprimés en dirhams. La console affiche les heures du Maroc ; les échanges et le stockage utilisent UTC.
 
@@ -82,6 +82,8 @@ docker compose ps -a
 
 Les services `volume-init`, `kafka-init` et `cassandra-init` doivent se terminer avec le code 0. Le master Spark et le worker démarrent après l’initialisation. Cassandra peut prendre une à trois minutes pour être prêt.
 
+Pour reprendre le projet après avoir exécuté l’ancienne version du job, suivre la [procédure de démarrage avec des volumes distincts](docs/recette.md#premier-démarrage-après-la-correction-de-lingestion).
+
 **2. Soumettre le job dans un terminal dédié :**
 
 ```bash
@@ -92,7 +94,7 @@ Le script lance `spark-submit` sur le master et résout les deux connecteurs Mav
 
 Depuis PowerShell, appeler Git Bash explicitement : `& "C:\Program Files\Git\bin\bash.exe" submit.sh`. La commande `bash` de PowerShell désigne souvent WSL. Si `docker` est introuvable, ajouter le dossier `resources\bin` de Docker Desktop au `PATH`, par exemple `$env:PATH += ";$env:LOCALAPPDATA\Programs\DockerDesktop\resources\bin"` selon l’installation.
 
-**Indisponibilité de Cassandra.** Une écriture en échec est retentée pendant environ 90 secondes. Au-delà, seule la requête concernée est relancée depuis son checkpoint ; les autres continuent. Si le job s’arrête malgré tout, `submit.sh` le soumet de nouveau après 20 secondes, et abandonne après cinq arrêts anormaux consécutifs. Les reprises utilisent les checkpoints : aucune transaction n’est perdue, et une alerte peut être republiée dans `fraud-alerts` (livraison au moins une fois).
+**Indisponibilité de Cassandra.** Une écriture en échec est retentée pendant environ 90 secondes. Au-delà, seule la requête concernée est relancée depuis son checkpoint. Si le job s’arrête, `submit.sh` attend 20 secondes entre les nouvelles soumissions et autorise cinq relances consécutives. Les reprises utilisent les checkpoints et les données conservées dans les volumes. Une alerte peut être republiée dans `fraud-alerts` (livraison au moins une fois).
 
 **3. Alimenter Kafka dans un deuxième terminal :**
 
@@ -145,7 +147,9 @@ Arrêter d’abord le job avec `Ctrl+C` ou `bash submit.sh --stop`. Les données
 }
 ```
 
-Les six champs sont obligatoires. Les identifiants contiennent de 1 à 64 lettres ASCII, chiffres, tirets ou underscores. Le montant est positif et limité à deux décimales. Le fuseau horaire est obligatoire. Les identifiants de transaction doivent être uniques. L’horodatage suit le format `AAAA-MM-JJTHH:MM:SS`, avec fractions de seconde facultatives et un fuseau `Z` ou `±HH:MM`. Un horodatage de plus de cinq minutes dans le futur est rejeté. Spark et la démonstration appliquent ce contrat avec le même motif et le même seuil, définis dans `fraud_core.py`.
+Les six champs sont obligatoires. Les identifiants contiennent de 1 à 64 lettres ASCII, chiffres, tirets ou underscores. Le montant est positif et limité à deux décimales. L’horodatage suit le format `AAAA-MM-JJTHH:MM:SS`, avec une fraction facultative de un à six chiffres et un fuseau `Z` ou `±HH:MM`. Le flux conserve la précision à la microseconde.
+
+Spark compare le temps événement à l’heure d’arrivée enregistrée par Kafka et rejette tout écart futur de plus de cinq minutes. La démonstration applique la même tolérance au moment de l’ingestion locale. Spark conserve le premier enregistrement valide de chaque identifiant avant de l’envoyer aux règles et à Cassandra. Dans un même micro-lot, l’heure d’arrivée, la partition et l’offset départagent les doublons.
 
 Produire du NDJSON sans Kafka :
 
@@ -158,7 +162,7 @@ python3 producer.py --scenario mix --count 20 --interval 0 > transactions.ndjson
 ```bash
 python3 -m unittest discover -v
 python3 -m compileall -q app.py fraud_core.py storage.py producer.py streaming_cassandra.py
-bash -n submit.sh scripts/init-topics.sh
+bash -n submit.sh && bash -n scripts/init-topics.sh
 ```
 
 Les tests couvrent les bornes des seuils, les événements désordonnés, les fenêtres fixes, les doublons, les upserts, la persistance du suivi, la cohérence des indicateurs, les routes HTTP, les seuils partagés entre Python et Spark, le contrat d’horodatage commun et la politique de relance face à Cassandra. Ils n’exécutent pas le moteur Spark.

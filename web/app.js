@@ -88,6 +88,16 @@ function emptyRow(columns, title, text) {
   return `<tr><td colspan="${columns}" class="empty-cell"><strong>${escapeHTML(title)}</strong>${escapeHTML(text)}</td></tr>`;
 }
 
+function renderActionList(id, markup, key = "data-alert", fallback = "main") {
+  const list = $(id);
+  const active = document.activeElement;
+  const identity = list.contains(active) ? active.getAttribute(key) : null;
+  list.innerHTML = markup;
+  if (identity === null) return;
+  const button = list.querySelector(`button[${key}="${CSS.escape(identity)}"]`);
+  (button || $(fallback)).focus({ preventScroll: true });
+}
+
 function route() {
   const previousView = state.view;
   const next = location.hash.slice(1) || "overview";
@@ -205,7 +215,7 @@ function renderRiskOverview() {
     return { severity, info, count: rows.length, open: rows.filter((alert) => ["nouvelle", "en_cours"].includes(alert.status)).length };
   });
   $("severity-bar").innerHTML = total ? levels.filter((level) => level.count).map((level) => `<span class="${level.info.key}" style="width:${level.count / total * 100}%" title="${level.info.label} : ${level.count}"></span>`).join("") : "";
-  $("severity-legend").innerHTML = levels.map((level) => `<button class="severity-item" data-severity="${escapeHTML(level.severity)}" title="Voir les alertes de niveau ${level.info.label.toLocaleLowerCase("fr")}"><span><i style="background:${level.info.color}"></i>${level.info.label}</span><strong>${number.format(level.count)}</strong><small>${level.open ? counted(level.open, "à traiter", "à traiter") : "Aucune à traiter"}</small></button>`).join("");
+  renderActionList("severity-legend", levels.map((level) => `<button class="severity-item" data-severity="${escapeHTML(level.severity)}" title="Voir les alertes de niveau ${level.info.label.toLocaleLowerCase("fr")}"><span><i style="background:${level.info.color}"></i>${level.info.label}</span><strong>${number.format(level.count)}</strong><small>${level.open ? counted(level.open, "à traiter", "à traiter") : "Aucune à traiter"}</small></button>`).join(""), "data-severity");
   const inProgress = alerts.filter((alert) => alert.status === "en_cours").length;
   const closed = alerts.filter((alert) => ["confirmee", "ecartee"].includes(alert.status)).length;
   const clients = new Set(alerts.map((alert) => alert.card_holder_id)).size;
@@ -222,8 +232,8 @@ function renderPriority() {
   $("priority-count").textContent = number.format(critical.length);
   $("priority-critical").disabled = !critical.length;
   $("priority-open").disabled = !open.length;
-  $("critical-list").innerHTML = critical.slice(0, 3).map((alert) => `<li><button class="critical-item" data-alert="${escapeHTML(alert.alert_id)}"><span><strong>${escapeHTML(alert.card_holder_id)}</strong><small>${escapeHTML(alert.previous_location ? alert.previous_location + " → " + alert.location : alert.location)} · ${timeFormat.format(new Date(alert.timestamp))}</small></span>${amountCell(alert.amount)}</button></li>`).join("") ||
-    `<li class="critical-empty">${icon("check")}Aucune alerte critique en attente.</li>`;
+  renderActionList("critical-list", critical.slice(0, 3).map((alert) => `<li><button class="critical-item" data-alert="${escapeHTML(alert.alert_id)}"><span><strong>${escapeHTML(alert.card_holder_id)}</strong><small>${escapeHTML(alert.previous_location ? alert.previous_location + " → " + alert.location : alert.location)} · ${timeFormat.format(new Date(alert.timestamp))}</small></span>${amountCell(alert.amount)}</button></li>`).join("") ||
+    `<li class="critical-empty">${icon("check")}Aucune alerte critique en attente.</li>`);
 }
 
 function renderIndicators() {
@@ -249,10 +259,10 @@ function renderNotifications() {
   $("notifications-count").hidden = !count;
   $("notifications-button").setAttribute("aria-label", count ? `Notifications : ${counted(count, "alerte")} à traiter` : "Notifications");
   $("notifications-summary").textContent = count ? `${counted(count, "alerte")} à traiter` : "Aucune alerte à traiter";
-  $("notifications-list").innerHTML = open.slice(0, 6).map((alert) => {
+  renderActionList("notifications-list", open.slice(0, 6).map((alert) => {
     const rule = RULES[alert.rule] || RULES.MONTANT_ELEVE;
     return `<button class="notification-item" data-alert="${escapeHTML(alert.alert_id)}"><span class="rule-indicator ${rule.indicator}">${icon(rule.icon)}</span><span><strong>${escapeHTML(rule.label)}</strong><small>${escapeHTML(alert.card_holder_id)} · ${escapeHTML(alert.location)} · ${timeFormat.format(new Date(alert.timestamp))}</small></span>${amountCell(alert.amount)}</button>`;
-  }).join("") || `<p class="popover-empty">Aucune alerte en attente sur la période.</p>`;
+  }).join("") || `<p class="popover-empty">Aucune alerte en attente sur la période.</p>`, "data-alert", "notifications-button");
   $("notifications-all").disabled = !count;
 }
 
@@ -264,34 +274,40 @@ function renderOverview() {
   renderActivity();
   renderDistribution();
   renderIndicators();
-  $("recent-alerts").innerHTML = data.alerts.slice(0, 6).map((alert) => alertRow(alert, true)).join("") || emptyRow(6, "Aucune alerte sur cette période", "Les prochaines détections apparaîtront ici.");
+  renderActionList("recent-alerts", data.alerts.slice(0, 6).map((alert) => alertRow(alert, true)).join("") ||
+    emptyRow(6, "Aucune alerte sur cette période", "Les prochaines détections apparaîtront ici."));
   const cities = data.cities.filter((city) => city.count > 0).sort((a, b) => b.count - a.count).slice(0, 8);
   const maximum = Math.max(1, ...cities.map((city) => city.count));
-  $("city-list").innerHTML = cities.map((city) => `<button class="city-row" data-city="${escapeHTML(city.name)}" title="Voir les transactions à ${escapeHTML(city.name)}"><span class="city-row-info"><strong>${escapeHTML(city.name)}</strong><small class="${city.alerts ? "has-alerts" : ""}">${city.alerts ? counted(city.alerts, "alerte") : "Aucune alerte"}</small></span><span class="city-bar" aria-hidden="true"><span style="width:${city.count / maximum * 100}%"></span></span><span class="city-total">${number.format(city.count)}</span></button>`).join("") || `<p class="empty-cell">Aucune transaction sur cette période.</p>`;
+  renderActionList("city-list", cities.map((city) => `<button class="city-row" data-city="${escapeHTML(city.name)}" title="Voir les transactions à ${escapeHTML(city.name)}"><span class="city-row-info"><strong>${escapeHTML(city.name)}</strong><small class="${city.alerts ? "has-alerts" : ""}">${city.alerts ? counted(city.alerts, "alerte") : "Aucune alerte"}</small></span><span class="city-bar" aria-hidden="true"><span style="width:${city.count / maximum * 100}%"></span></span><span class="city-total">${number.format(city.count)}</span></button>`).join("") ||
+    `<p class="empty-cell">Aucune transaction sur cette période.</p>`, "data-city");
 }
 
 function renderActivity() {
   const series = state.data.series;
-  const width = Math.max(290, $("activity-chart").clientWidth), height = innerWidth <= 600 ? 200 : 240, left = 38, right = 8, top = 14, bottom = 28;
-  const innerWidth_ = width - left - right, innerHeight = height - top - bottom;
   const maxValue = Math.max(4, ...series.map((point) => point.transactions), ...series.map((point) => point.alerts));
   const max = Math.ceil(maxValue / 4) * 4;
+  const width = Math.max(290, $("activity-chart").clientWidth), height = innerWidth <= 600 ? 200 : 240;
+  const left = Math.max(38, number.format(max).length * 7 + 10), right = 8, top = 14, bottom = 28;
+  const innerWidth_ = width - left - right, innerHeight = height - top - bottom;
   const gap = innerWidth_ / series.length;
   const cx = (i) => left + i * gap + gap / 2;
   const y = (value) => top + innerHeight - value / max * innerHeight;
   let svg = `<svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none"><title>Transactions et alertes pendant la période sélectionnée</title><defs><linearGradient id="activity-fill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#ff7417" stop-opacity=".26"/><stop offset="1" stop-color="#ff7417" stop-opacity="0"/></linearGradient></defs>`;
   for (let i = 0; i <= 4; i++) {
     const value = i * max / 4;
-    svg += `<line x1="${left}" x2="${width - right}" y1="${y(value)}" y2="${y(value)}" stroke="#eef1f5" ${i ? "" : 'stroke="#dfe3ea"'}/><text x="${left - 10}" y="${y(value) + 3.5}" text-anchor="end">${number.format(value)}</text>`;
+    svg += `<line x1="${left}" x2="${width - right}" y1="${y(value)}" y2="${y(value)}" stroke="${i ? "#eef1f5" : "#dfe3ea"}"/><text x="${left - 10}" y="${y(value) + 3.5}" text-anchor="end">${number.format(value)}</text>`;
   }
   const line = series.map((point, i) => `${i ? "L" : "M"}${cx(i).toFixed(1)},${y(point.transactions).toFixed(1)}`).join(" ");
   svg += `<path d="${line} L${cx(series.length - 1).toFixed(1)},${y(0)} L${cx(0).toFixed(1)},${y(0)} Z" fill="url(#activity-fill)"/>`;
   series.forEach((point, i) => {
     if (point.alerts > 0) svg += `<rect x="${cx(i) - Math.min(9, gap * .5) / 2}" y="${y(point.alerts)}" width="${Math.min(9, gap * .5)}" height="${Math.max(2, point.alerts / max * innerHeight)}" rx="2.5" fill="#e5484d"/>`;
   });
-  svg += `<path d="${line}" fill="none" stroke="#ff7417" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>`;
+  svg += `<path d="${line}" fill="none" stroke="var(--orange-ink)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>`;
   series.forEach((point, i) => {
-    if (i % 6 === 0 || i === series.length - 1) svg += `<text x="${cx(i)}" y="${height - 8}" text-anchor="middle">${timeFormat.format(new Date(point.timestamp))}</text>`;
+    const last = i === series.length - 1;
+    if (i % 6 === 0 || last) {
+      svg += `<text x="${last ? width - right : cx(i)}" y="${height - 8}" text-anchor="${last ? "end" : "middle"}">${timeFormat.format(new Date(point.timestamp))}</text>`;
+    }
     svg += `<rect x="${left + i * gap}" y="${top}" width="${gap}" height="${innerHeight}" fill="transparent"><title>${timeFormat.format(new Date(point.timestamp))} · ${counted(point.transactions, "transaction")} · ${counted(point.alerts, "alerte")}</title></rect>`;
   });
   $("activity-chart").innerHTML = svg + "</svg>";
@@ -310,7 +326,7 @@ function renderDistribution() {
     return segment;
   }).join("");
   $("distribution-chart").innerHTML = `<svg viewBox="0 0 42 42"><circle cx="21" cy="21" r="15.9155" fill="none" stroke="#eef1f5" stroke-width="5.2"/>${segments}</svg><div class="donut-center"><strong>${number.format(total)}</strong><small>${total === 1 ? "alerte" : "alertes"}</small></div>`;
-  $("distribution-legend").innerHTML = items.map((item) => `<button class="distribution-row" data-rule="${item.rule}" title="Voir les alertes : ${escapeHTML(item.label)}"><i style="background:${RULES[item.rule].color}"></i><span>${escapeHTML(item.label)}</span><strong>${number.format(item.count)}</strong><span class="percent">${total ? Math.round(item.count / total * 100) : 0} %</span></button>`).join("");
+  renderActionList("distribution-legend", items.map((item) => `<button class="distribution-row" data-rule="${item.rule}" title="Voir les alertes : ${escapeHTML(item.label)}"><i style="background:${RULES[item.rule].color}"></i><span>${escapeHTML(item.label)}</span><strong>${number.format(item.count)}</strong><span class="percent">${total ? Math.round(item.count / total * 100) : 0} %</span></button>`).join(""), "data-rule");
 }
 
 function alertRow(alert, compact = false) {
@@ -349,7 +365,8 @@ function renderAlerts() {
   $("clear-alert-filters").hidden = !($("alert-search").value || $("rule-filter").value !== "all" || $("severity-filter").value !== "all" || state.tab !== "all" || $("alert-sort").value !== "date");
   $("alert-summary").innerHTML = `<span><strong>${number.format(total)}</strong>alertes sur la période</span><span><strong>${number.format(state.data.summary.critical_alerts)}</strong>critiques</span><span><strong>${number.format(state.data.summary.open_alerts)}</strong>à traiter ou en cours</span>`;
   state.alertPage = renderPagination("alert", state.alertPage, alerts.length);
-  $("all-alerts").innerHTML = alerts.slice((state.alertPage - 1) * 12, state.alertPage * 12).map((alert) => alertRow(alert)).join("") || emptyRow(8, "Aucune alerte ne correspond à cette sélection", "Modifiez les filtres, la recherche ou la période d’analyse.");
+  renderActionList("all-alerts", alerts.slice((state.alertPage - 1) * 12, state.alertPage * 12).map((alert) => alertRow(alert)).join("") ||
+    emptyRow(8, "Aucune alerte ne correspond à cette sélection", "Modifiez les filtres, la recherche ou la période d’analyse."), "data-alert", "alert-table-scroll");
 }
 
 function filteredTransactions() {
@@ -422,7 +439,7 @@ async function refresh(force = false) {
   const request = ++state.request;
   const period = state.period;
   state.busy = true;
-  $("refresh-button").disabled = true;
+  $("refresh-button").setAttribute("aria-disabled", "true");
   $("refresh-button").classList.add("is-refreshing");
   try {
     const data = await api(`/api/snapshot?period=${encodeURIComponent(period)}`);
@@ -447,7 +464,7 @@ async function refresh(force = false) {
   } finally {
     if (request === state.request) {
       state.busy = false;
-      $("refresh-button").disabled = false;
+      $("refresh-button").removeAttribute("aria-disabled");
       $("refresh-button").classList.remove("is-refreshing");
     }
   }
@@ -468,7 +485,7 @@ async function refreshHealth() {
   finally { $("health-refresh").disabled = false; }
 }
 
-function openAlert(id, origin = "view") {
+function openAlert(id, origin = "view", trigger) {
   const alert = state.data?.alerts.find((item) => item.alert_id === id) || state.lastRun?.detected_alerts.find((item) => item.alert_id === id);
   if (!alert) return toast("Cette alerte ne figure plus dans la période sélectionnée.", true);
   if (origin !== "retain") {
@@ -489,7 +506,10 @@ function openAlert(id, origin = "view") {
     const tx = transactions.get(id);
     return `<li><code>${escapeHTML(id)}</code>${tx ? `<div><span>${escapeHTML(tx.location)} · ${secondFormat.format(new Date(tx.timestamp))}</span><strong>${decimal.format(tx.amount)} DH</strong></div>` : '<small>Hors de la période ou du journal chargé</small>'}</li>`;
   }).join("")}</ol></section>`);
-  if (!$("alert-dialog").open) $("alert-dialog").showModal();
+  if (!$("alert-dialog").open) {
+    trigger?.focus({ preventScroll: true });
+    $("alert-dialog").showModal();
+  }
 }
 
 function csvValue(value) {
@@ -602,7 +622,11 @@ async function executeScenario(options = {}) {
 
 document.addEventListener("click", (event) => {
   const alertElement = event.target.closest("[data-alert]");
-  if (alertElement) openAlert(alertElement.dataset.alert, alertElement.closest("#demo-result") ? "demo" : "view");
+  if (alertElement) {
+    const trigger = alertElement.closest("#notifications-panel") ? $("notifications-button")
+      : alertElement.matches("button") ? alertElement : alertElement.querySelector("button[data-alert]");
+    openAlert(alertElement.dataset.alert, alertElement.closest("#demo-result") ? "demo" : "view", trigger);
+  }
   const client = event.target.closest("[data-client]");
   if (client) showTransactions(client.dataset.client);
   const city = event.target.closest("[data-city]");
@@ -693,7 +717,7 @@ for (const [prefix, property, renderTable] of [["alert", "alertPage", renderAler
   $(prefix + "-next").addEventListener("click", () => { state[property]++; renderTable(); });
 }
 $("export-button").addEventListener("click", exportCSV);
-$("refresh-button").addEventListener("click", () => refresh(true));
+$("refresh-button").addEventListener("click", () => { if (!state.busy) refresh(true); });
 $("retry-button").addEventListener("click", () => refresh(true));
 $("clear-alert-filters").addEventListener("click", resetAlertFilters);
 for (const id of ["priority-open", "priority-critical"]) $(id).addEventListener("click", () => {
@@ -727,39 +751,81 @@ $("demo-speed").addEventListener("change", async () => {
   finally { $("demo-speed").disabled = false; }
 });
 $("health-refresh").addEventListener("click", refreshHealth);
-function closeMenu() {
-  $("sidebar").classList.remove("open");
-  $("sidebar-backdrop").hidden = true;
-  $("menu-button").setAttribute("aria-expanded", "false");
+const menuViewport = matchMedia("(max-width: 1000px)");
+const sidebar = $("sidebar");
+const menuButton = $("menu-button");
+const workspace = document.querySelector(".workspace");
+const skipLink = document.querySelector(".skip-link");
+
+function setMenu(open) {
+  sidebar.classList.toggle("open", open);
+  $("sidebar-backdrop").hidden = !open;
+  menuButton.setAttribute("aria-expanded", String(open));
+  workspace.inert = open;
+  skipLink.inert = open;
+  document.body.classList.toggle("menu-open", open);
+  if (open) {
+    sidebar.setAttribute("role", "dialog");
+    sidebar.setAttribute("aria-modal", "true");
+  } else {
+    sidebar.removeAttribute("role");
+    sidebar.removeAttribute("aria-modal");
+  }
 }
 
-$("menu-button").addEventListener("click", () => {
-  const expanded = $("sidebar").classList.toggle("open");
-  $("sidebar-backdrop").hidden = !expanded;
-  $("menu-button").setAttribute("aria-expanded", String(expanded));
-  if (expanded) $("sidebar").querySelector(".nav-item.active, .nav-item")?.focus();
+function closeMenu(restoreFocus = false) {
+  if (!sidebar.classList.contains("open")) return;
+  setMenu(false);
+  if (restoreFocus) {
+    const target = menuViewport.matches ? menuButton : sidebar.querySelector(".nav-item.active");
+    target?.focus({ preventScroll: true });
+  }
+}
+
+menuButton.addEventListener("click", () => {
+  if (!menuViewport.matches || sidebar.classList.contains("open")) return;
+  closePopovers();
+  setMenu(true);
+  requestAnimationFrame(() => {
+    if (!sidebar.classList.contains("open") || sidebar.contains(document.activeElement)) return;
+    (sidebar.querySelector(".nav-item.active:not([hidden])") || $("sidebar-close")).focus();
+  });
 });
-$("sidebar-close").addEventListener("click", () => { closeMenu(); $("menu-button").focus(); });
+$("sidebar-close").addEventListener("click", () => closeMenu(true));
+$("sidebar-backdrop").addEventListener("click", () => closeMenu(true));
+menuViewport.addEventListener("change", () => {
+  if (!menuViewport.matches) closeMenu(true);
+  else if (sidebar.contains(document.activeElement)) menuButton.focus({ preventScroll: true });
+});
 
 const POPOVERS = [["notifications-button", "notifications-panel"], ["settings-button", "settings-panel"]];
 function closePopovers(except) {
   for (const [button, panel] of POPOVERS) {
-    if (panel === except) continue;
+    if (panel === except || $(panel).hidden) continue;
+    const restoreFocus = $(panel).contains(document.activeElement);
     $(panel).hidden = true;
     $(button).setAttribute("aria-expanded", "false");
+    if (restoreFocus) $(button).focus({ preventScroll: true });
   }
 }
 for (const [button, panel] of POPOVERS) {
   $(button).addEventListener("click", (event) => {
     event.stopPropagation();
-    const opening = $(panel).hidden;
+    if (!$(panel).hidden) {
+      closePopovers();
+      return;
+    }
     closePopovers(panel);
-    $(panel).hidden = !opening;
-    $(button).setAttribute("aria-expanded", String(opening));
+    $(panel).hidden = false;
+    $(button).setAttribute("aria-expanded", "true");
+    ($(panel).querySelector("button:not(:disabled):not([hidden])") || $(panel)).focus({ preventScroll: true });
   });
 }
 document.addEventListener("click", (event) => {
   if (!event.target.closest(".popover-anchor") || event.target.closest(".popover [data-alert], .popover-item, .popover-link")) closePopovers();
+});
+document.addEventListener("focusin", (event) => {
+  closePopovers(event.target.closest(".popover-anchor")?.querySelector(".popover")?.id);
 });
 $("notifications-all").addEventListener("click", () => $("priority-open").click());
 $("settings-refresh").addEventListener("click", () => refresh(true));
@@ -775,27 +841,28 @@ $("global-search").addEventListener("submit", (event) => {
   $("global-search-input").blur();
 });
 document.addEventListener("keydown", (event) => {
-  if (event.key !== "Escape") return;
-  const openPopover = POPOVERS.find(([, panel]) => !$(panel).hidden);
-  if (openPopover) { closePopovers(); $(openPopover[0]).focus(); return; }
-  if ($("sidebar").classList.contains("open")) {
-    closeMenu();
-    $("menu-button").focus();
+  if (event.key === "Escape") {
+    const openPopover = POPOVERS.find(([, panel]) => !$(panel).hidden);
+    if (openPopover) { event.preventDefault(); closePopovers(); return; }
+    if (sidebar.classList.contains("open")) { event.preventDefault(); closeMenu(true); }
+  }
+  if (event.key !== "Tab" || !sidebar.classList.contains("open")) return;
+  const items = [...sidebar.querySelectorAll("a[href], button:not(:disabled)")].filter((item) => item.getClientRects().length);
+  const first = items[0], last = items.at(-1);
+  const active = document.activeElement;
+  if (!sidebar.contains(active) || (event.shiftKey ? active === first : active === last)) {
+    event.preventDefault();
+    (event.shiftKey ? last : first).focus();
   }
 });
-for (const eventName of ["click", "focusin"]) {
-  document.addEventListener(eventName, (event) => {
-    if ($("sidebar").classList.contains("open") && !event.target.closest("#sidebar, #menu-button")) closeMenu();
-  });
-}
-document.querySelector(".skip-link").addEventListener("click", (event) => {
+skipLink.addEventListener("click", (event) => {
   event.preventDefault();
   $("main").focus();
 });
-$("sidebar").addEventListener("click", (event) => {
-  if (event.target.closest(".nav-item") && $("sidebar").classList.contains("open")) {
+sidebar.addEventListener("click", (event) => {
+  if (event.target.closest('a[href^="#"]') && sidebar.classList.contains("open")) {
     closeMenu();
-    $("main").focus();
+    $("main").focus({ preventScroll: true });
   }
 });
 window.addEventListener("hashchange", route);

@@ -20,9 +20,13 @@ VELOCITY_THRESHOLD = 3
 HISTORY_SECONDS = max(WINDOW_SECONDS, TRAVEL_MAX_SECONDS)
 # Contrat d'horodatage commun au job Spark et à la démonstration.
 FUTURE_TOLERANCE_SECONDS = 300
-TIMESTAMP_PATTERN = r"^\d{4}-\d{2}-\d{2}T.*(?:Z|[+-]\d{2}:\d{2})$"
-# Spark ne convertit pas un horodatage sans secondes (« 2026-10-06T08:55Z ») : il le rejette.
-TIMESTAMP_SECONDS_PATTERN = r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}"
+TIMESTAMP_PATTERN = (
+    r"(?!0000)[0-9]{4}-[0-9]{2}-[0-9]{2}T(?:[01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]"
+    r"(?:\.([0-9]{1,6}))?(?:Z|[+-](?:(?:0[0-9]|1[0-7]):[0-5][0-9]|18:00))"
+)
+EPOCH = datetime(1970, 1, 1, tzinfo=UTC)
+WINDOW_DURATION = timedelta(seconds=WINDOW_SECONDS)
+TRANSACTION_FIELDS = ("transaction_id", "card_holder_id", "amount", "location", "merchant_type", "timestamp")
 CITIES = {
     "Casablanca": (33.5731, -7.5898),
     "Rabat": (34.0209, -6.8416),
@@ -63,7 +67,7 @@ def travel_detail(origin, destination, distance, seconds, speed):
 
 
 def iso(value):
-    return value.astimezone(UTC).isoformat(timespec="milliseconds").replace("+00:00", "Z")
+    return value.astimezone(UTC).isoformat(timespec="microseconds").replace("+00:00", "Z")
 
 
 def parse_time(value):
@@ -75,14 +79,22 @@ def parse_time(value):
         raise ValueError("Horodatage ISO 8601 invalide.") from exc
     if result.tzinfo is None:
         raise ValueError("Le fuseau horaire est obligatoire.")
-    return result.astimezone(UTC)
+    try:
+        return result.astimezone(UTC)
+    except OverflowError as exc:
+        raise ValueError("Horodatage hors de la plage UTC prise en charge.") from exc
 
 
 def validate_timestamp(value, now=None):
-    """Applique les règles du filtre Spark : format, fuseau et au plus 5 minutes dans le futur."""
-    result = parse_time(value)
-    if not (re.match(TIMESTAMP_PATTERN, value, re.ASCII) and re.match(TIMESTAMP_SECONDS_PATTERN, value, re.ASCII)):
+    """Valide le format et la tolérance par rapport à la réception."""
+    match = re.fullmatch(TIMESTAMP_PATTERN, value) if isinstance(value, str) else None
+    if match is None:
         raise ValueError("L’horodatage doit suivre le format AAAA-MM-JJTHH:MM:SS avec un fuseau Z ou ±HH:MM.")
+    if match.group(1) is not None:
+        start, end = match.span(1)
+        # Python 3.10 attend trois ou six décimales dans fromisoformat.
+        value = value[:start] + value[start:end].ljust(6, "0") + value[end:]
+    result = parse_time(value)
     if result > (now or datetime.now(UTC)) + timedelta(seconds=FUTURE_TOLERANCE_SECONDS):
         raise ValueError(f"L’horodatage dépasse de plus de {window_label(FUTURE_TOLERANCE_SECONDS)} l’heure actuelle.")
     return result
@@ -91,8 +103,7 @@ def validate_timestamp(value, now=None):
 def validate_transaction(raw, now=None):
     if not isinstance(raw, dict):
         raise ValueError("Une transaction doit être un objet JSON.")
-    required = ("transaction_id", "card_holder_id", "amount", "location", "merchant_type", "timestamp")
-    if any(key not in raw for key in required):
+    if any(key not in raw for key in TRANSACTION_FIELDS):
         raise ValueError("Les six champs du contrat de transaction sont obligatoires.")
     for key in ("transaction_id", "card_holder_id"):
         if not isinstance(raw[key], str) or not re.fullmatch(r"[A-Za-z0-9_-]{1,64}", raw[key]):
@@ -111,7 +122,8 @@ def validate_transaction(raw, now=None):
         raise ValueError("La ville doit appartenir au référentiel géographique marocain.")
     if not isinstance(raw["merchant_type"], str) or not 1 <= len(raw["merchant_type"].strip()) <= 64:
         raise ValueError("Catégorie de commerce invalide.")
-    return {**{key: raw[key] for key in required}, "amount": float(amount), "timestamp": iso(validate_timestamp(raw["timestamp"], now))}
+    return {**{key: raw[key] for key in TRANSACTION_FIELDS},
+            "amount": float(amount), "timestamp": iso(validate_timestamp(raw["timestamp"], now))}
 
 
 def distance_km(city_a, city_b):
@@ -141,13 +153,15 @@ def detect(tx, history):
         alerts.append(make_alert(tx, "MONTANT_ELEVE", AMOUNT_DETAIL, [tx["transaction_id"]]))
     relevant = [p for p in history if p["card_holder_id"] == tx["card_holder_id"] and p["transaction_id"] != tx["transaction_id"]]
     for previous in relevant:
-        delta = abs((event_time - parse_time(previous["timestamp"])).total_seconds())
+        previous_time = parse_time(previous["timestamp"])
+        delta = abs((event_time - previous_time).total_seconds())
         if delta > TRAVEL_MAX_SECONDS:
             continue
         distance = distance_km(tx["location"], previous["location"])
         speed = distance * 3600 / max(delta, 1)
         if distance >= MIN_DISTANCE_KM and speed > SPEED_THRESHOLD:
-            early, late = sorted([tx, previous], key=lambda item: (item["timestamp"], item["transaction_id"]))
+            previous_first = (previous_time, previous["transaction_id"]) < (event_time, tx["transaction_id"])
+            early, late = (previous, tx) if previous_first else (tx, previous)
             alerts.append(make_alert(
                 late, "VOYAGE_IMPOSSIBLE",
                 travel_detail(early["location"], late["location"], distance, delta, speed),
@@ -156,10 +170,10 @@ def detect(tx, history):
                 related_transaction_ids=sorted([tx["transaction_id"], previous["transaction_id"]]),
                 distance_km=round(distance, 1), speed_kmh=round(speed),
             ))
-    bucket = int(event_time.timestamp()) // WINDOW_SECONDS
-    window = [p for p in relevant if int(parse_time(p["timestamp"]).timestamp()) // WINDOW_SECONDS == bucket] + [tx]
+    bucket = (event_time - EPOCH) // WINDOW_DURATION
+    window = [p for p in relevant if (parse_time(p["timestamp"]) - EPOCH) // WINDOW_DURATION == bucket] + [tx]
     if len(window) >= VELOCITY_THRESHOLD:
-        latest = max(window, key=lambda item: (item["timestamp"], item["transaction_id"]))
+        latest = max(window, key=lambda item: (parse_time(item["timestamp"]), item["transaction_id"]))
         alerts.append(make_alert(latest, "FREQUENCE_ELEVEE", frequency_detail(len(window)),
                                  [tx["card_holder_id"], bucket], transaction_count=len(window),
                                  related_transaction_ids=sorted(p["transaction_id"] for p in window)))
@@ -207,7 +221,7 @@ class Generator:
             if isinstance(count, bool) or not isinstance(count, int) or not 2 <= count <= 8:
                 raise ValueError("Le nombre de transactions doit être compris entre 2 et 8.")
             # Aucun événement futur, même au premier instant d’une fenêtre.
-            start = datetime.fromtimestamp(int(when.timestamp()) // WINDOW_SECONDS * WINDOW_SECONDS, UTC)
+            start = when - (when - EPOCH) % WINDOW_DURATION
             events = [self.transaction(max(start, when - timedelta(seconds=count - 1 - i)), card_holder_id=holder, location="Rabat") for i in range(count)]
         if kind == "normale":
             events = [self.transaction(when, card_holder_id=holder, location=self.random.choice(list(CITIES)))]

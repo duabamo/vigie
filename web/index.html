@@ -85,10 +85,10 @@
         <div class="topbar-actions">
           <div class="period-control"><svg class="icon"><use href="#i-clock"/></svg><label class="sr-only" for="period">Période d’analyse</label><select id="period" class="select period"><option value="15m">15 dernières minutes</option><option value="1h" selected>Dernière heure</option><option value="24h">Dernières 24 heures</option></select></div>
           <button class="icon-button refresh-button" id="refresh-button" aria-label="Actualiser les données" title="Actualiser les données"><svg class="icon"><use href="#i-refresh"/></svg></button>
-          <button class="button primary export-button" id="export-button"><svg class="icon"><use href="#i-download"/></svg><span>Exporter</span></button>
+          <button class="button primary export-button" id="export-button" aria-label="Exporter en CSV" title="Exporter en CSV"><svg class="icon" aria-hidden="true"><use href="#i-download"/></svg><span>Exporter</span></button>
           <div class="popover-anchor">
             <button class="icon-button" id="notifications-button" aria-label="Notifications" title="Notifications" aria-controls="notifications-panel" aria-expanded="false"><svg class="icon"><use href="#i-bell"/></svg><span class="notification-count" id="notifications-count" hidden>0</span></button>
-            <div class="popover" id="notifications-panel" role="dialog" aria-label="Notifications" hidden>
+            <div class="popover" id="notifications-panel" role="dialog" aria-label="Notifications" tabindex="-1" hidden>
               <div class="popover-head"><strong>Notifications</strong><span id="notifications-summary">—</span></div>
               <div class="notification-list" id="notifications-list"></div>
               <button class="popover-link" id="notifications-all">Voir les alertes à traiter<svg class="icon"><use href="#i-chevron"/></svg></button>
@@ -96,7 +96,7 @@
           </div>
           <div class="popover-anchor">
             <button class="icon-button" id="settings-button" aria-label="Paramètres" title="Paramètres" aria-controls="settings-panel" aria-expanded="false"><svg class="icon"><use href="#i-settings"/></svg></button>
-            <div class="popover settings-popover" id="settings-panel" role="dialog" aria-label="Paramètres" hidden>
+            <div class="popover settings-popover" id="settings-panel" role="dialog" aria-label="Paramètres" tabindex="-1" hidden>
               <div class="popover-head"><strong>Paramètres</strong><span>Console locale</span></div>
               <button class="popover-item" id="settings-refresh"><svg class="icon"><use href="#i-refresh"/></svg><span><strong>Actualiser maintenant</strong><small>Mise à jour automatique toutes les 5 secondes</small></span></button>
               <button class="popover-item" id="settings-pause" hidden><svg class="icon"><use href="#i-pause"/></svg><span><strong id="settings-pause-label">Mettre le flux en pause</strong><small>Flux automatique de démonstration</small></span></button>
@@ -200,7 +200,8 @@
           <article class="panel">
             <div class="list-tabs" id="alert-tabs" role="group" aria-label="Filtrer par statut"><button data-tab="all" class="selected">Toutes les alertes <span id="tab-all">0</span></button><button data-tab="open">À traiter <span id="tab-open">0</span></button><button data-tab="en_cours">En cours</button><button data-tab="closed">Clôturées</button></div>
             <div class="table-toolbar"><label class="search-field"><svg class="icon"><use href="#i-search"/></svg><input id="alert-search" type="search" placeholder="Rechercher un client, une ville, un identifiant…" aria-label="Rechercher dans les alertes"></label><label class="sr-only" for="rule-filter">Règle de détection</label><select id="rule-filter" class="select"><option value="all">Toutes les règles</option><option value="MONTANT_ELEVE">Montant élevé</option><option value="VOYAGE_IMPOSSIBLE">Déplacement impossible</option><option value="FREQUENCE_ELEVEE">Fréquence inhabituelle</option></select><label class="sr-only" for="severity-filter">Niveau de gravité</label><select id="severity-filter" class="select"><option value="all">Tous les niveaux</option><option value="critique">Critique</option><option value="élevée">Élevée</option><option value="modérée">Modérée</option></select><label class="sr-only" for="alert-sort">Trier les alertes</label><select class="select" id="alert-sort"><option value="date">Plus récentes</option><option value="priority">Priorité la plus élevée</option><option value="amount">Montant décroissant</option></select><button class="button filter-reset" id="clear-alert-filters" hidden><svg class="icon"><use href="#i-close"/></svg>Effacer les filtres</button></div>
-            <div class="table-scroll"><table class="alert-table"><thead><tr><th>Alerte</th><th>Gravité</th><th>Client</th><th>Localisation</th><th class="align-right">Montant</th><th>Date et heure</th><th>Statut</th><th><span class="sr-only">Détail</span></th></tr></thead><tbody id="all-alerts"></tbody></table></div>
+            <p class="table-scroll-hint">Faites défiler le tableau pour voir les autres colonnes.</p>
+            <div class="table-scroll" id="alert-table-scroll" role="region" aria-label="Tableau des alertes" tabindex="0"><table class="alert-table"><thead><tr><th>Alerte</th><th>Gravité</th><th>Client</th><th>Localisation</th><th class="align-right">Montant</th><th>Date et heure</th><th>Statut</th><th><span class="sr-only">Détail</span></th></tr></thead><tbody id="all-alerts"></tbody></table></div>
             <div class="pagination"><span id="alert-result-count"></span><div><button class="button small" id="alert-prev" aria-label="Page précédente">Précédent</button><span id="alert-page"></span><button class="button small" id="alert-next" aria-label="Page suivante">Suivant</button></div></div>
           </article>
         </section>
@@ -209,7 +210,8 @@
           <div class="inline-summary" id="transaction-summary"></div>
           <article class="panel">
             <div class="table-toolbar"><label class="search-field"><svg class="icon"><use href="#i-search"/></svg><input id="transaction-search" type="search" placeholder="Rechercher une transaction, un client, une ville…" aria-label="Rechercher dans les transactions"></label><label class="sr-only" for="transaction-filter">Type de transaction</label><select id="transaction-filter" class="select"><option value="all">Toutes les transactions</option><option value="flagged">Transactions signalées</option><option value="normal">Sans alerte associée</option></select><button class="button filter-reset" id="clear-transaction-filters" hidden><svg class="icon"><use href="#i-close"/></svg>Effacer les filtres</button></div>
-            <div class="table-scroll"><table><thead><tr><th>Transaction</th><th>Client</th><th>Commerce</th><th>Localisation</th><th class="align-right">Montant</th><th>Date et heure</th><th>Détection</th></tr></thead><tbody id="all-transactions"></tbody></table></div>
+            <p class="table-scroll-hint">Faites défiler le tableau pour voir les autres colonnes.</p>
+            <div class="table-scroll" role="region" aria-label="Tableau des transactions" tabindex="0"><table><thead><tr><th>Transaction</th><th>Client</th><th>Commerce</th><th>Localisation</th><th class="align-right">Montant</th><th>Date et heure</th><th>Détection</th></tr></thead><tbody id="all-transactions"></tbody></table></div>
             <div class="pagination"><span id="transaction-result-count"></span><div><button class="button small" id="transaction-prev">Précédent</button><span id="transaction-page"></span><button class="button small" id="transaction-next">Suivant</button></div></div>
           </article>
         </section>

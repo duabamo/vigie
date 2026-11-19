@@ -9,11 +9,13 @@ import os
 import time
 
 from fraud_core import (AMOUNT_DETAIL, AMOUNT_THRESHOLD, CITIES, FUTURE_TOLERANCE_SECONDS, MIN_DISTANCE_KM, RULES,
-                        SPEED_THRESHOLD, TIMESTAMP_PATTERN, TRAVEL_MAX_SECONDS, VELOCITY_THRESHOLD, WINDOW_SECONDS,
-                        window_label)
+                        SPEED_THRESHOLD, TIMESTAMP_PATTERN, TRANSACTION_FIELDS, TRAVEL_MAX_SECONDS, VELOCITY_THRESHOLD,
+                        WINDOW_SECONDS, window_label)
 
 LOG = logging.getLogger("vigie.streaming")
-TRANSACTION_FIELDS = ("transaction_id", "card_holder_id", "amount", "location", "merchant_type", "timestamp")
+TIMESTAMP_INPUT_FORMAT = "yyyy-MM-dd'T'HH:mm:ss[.SSSSSS]XXX"
+TIMESTAMP_OUTPUT_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'"
+LEGACY_QUERIES = ("invalides", "transactions", "montants", "deplacements", "frequences")
 
 
 def spark_duration(seconds):
@@ -29,6 +31,14 @@ def spark_number(column):
 
 def sql_interval(seconds):
     return f"INTERVAL {spark_duration(seconds).upper()}"
+
+
+def checkpoint_paths(root):
+    if any(os.path.isfile(os.path.join(root, name, "metadata")) for name in LEGACY_QUERIES):
+        raise RuntimeError("Anciens checkpoints détectés. Utilisez un projet Compose distinct pour la nouvelle "
+                           "version, selon docs/recette.md.")
+    checkpoint = os.path.join(root, "v2")
+    return checkpoint, os.path.join(checkpoint, "transactions-acceptees")
 
 
 # Une coupure brève de Cassandra est absorbée dans le micro-lot (≈ 90 s cumulées).
@@ -80,11 +90,16 @@ def run():
 
     kafka = os.environ.get("KAFKA_BOOTSTRAP_SERVERS", "kafka:19092")
     cassandra = os.environ.get("CASSANDRA_HOST", "cassandra")
-    checkpoint = os.environ.get("CHECKPOINT_DIR", "/opt/spark/checkpoints")
+    checkpoint, accepted_path = checkpoint_paths(os.environ.get("CHECKPOINT_DIR", "/opt/spark/checkpoints"))
+    os.makedirs(accepted_path, exist_ok=True)
     keyspace = "fraud_monitoring"
     spark = (SparkSession.builder.appName("Vigie-Fraud-Monitoring")
              .config("spark.sql.session.timeZone", "UTC")
+             .config("spark.sql.timestampType", "TIMESTAMP_LTZ")
+             .config("spark.sql.legacy.timeParserPolicy", "CORRECTED")
              .config("spark.sql.shuffle.partitions", "2")
+             .config("spark.sql.parquet.outputTimestampType", "TIMESTAMP_MICROS")
+             .config("spark.sql.parquet.datetimeRebaseModeInWrite", "CORRECTED")
              .config("spark.cassandra.connection.host", cassandra)
              .config("spark.sql.streaming.multipleWatermarkPolicy", "min")
              .getOrCreate())
@@ -98,30 +113,47 @@ def run():
         T.StructField("timestamp", T.StringType()),
     ])
 
-    def read_input():
-        messages = (spark.readStream.format("kafka")
-                    .option("kafka.bootstrap.servers", kafka)
-                    .option("subscribe", "financial-transactions")
-                    .option("startingOffsets", "earliest")
-                    .option("failOnDataLoss", "true")
-                    .option("maxOffsetsPerTrigger", "10000").load())
-        parsed = messages.select(F.col("value").cast("string").alias("raw"),
-                                 F.from_json(F.col("value").cast("string"), schema).alias("record"))
-        flat = parsed.select("raw", "record.*").withColumnRenamed("timestamp", "timestamp_text")
-        flat = flat.withColumn("timestamp", F.to_timestamp("timestamp_text"))
-        valid = (F.col("transaction_id").rlike(r"^[A-Za-z0-9_-]{1,64}$") &
-                 F.col("card_holder_id").rlike(r"^[A-Za-z0-9_-]{1,64}$") &
-                 F.col("amount").isNotNull() & (F.col("amount") > 0) & (F.col("amount") <= F.lit(999999999.99)) &
-                 F.get_json_object("raw", "$.amount").rlike(r"^[0-9]+(?:\.[0-9]{1,2}0*)?$") &
-                 F.col("location").isin(list(CITIES)) &
-                 (F.length(F.trim("merchant_type")) > 0) & (F.length("merchant_type") <= 64) &
-                 F.col("timestamp_text").rlike(TIMESTAMP_PATTERN) &
-                 F.col("timestamp").isNotNull() &
-                 (F.col("timestamp") <= F.current_timestamp() + F.expr(sql_interval(FUTURE_TOLERANCE_SECONDS))))
-        return flat.withColumn("valid", F.coalesce(valid, F.lit(False)))
+    messages = (spark.readStream.format("kafka")
+                .option("kafka.bootstrap.servers", kafka)
+                .option("subscribe", "financial-transactions")
+                .option("startingOffsets", "earliest")
+                .option("failOnDataLoss", "true")
+                .option("maxOffsetsPerTrigger", "10000").load())
+    raw = messages.select(F.col("value").cast("string").alias("raw"),
+                          F.col("timestamp").alias("received_at"), "partition", "offset")
+    flat = raw.select("*", F.from_json("raw", schema).alias("record")).select(
+        "*", "record.*").drop("record").withColumnRenamed("timestamp", "timestamp_text")
+    flat = flat.withColumn("timestamp", F.try_to_timestamp("timestamp_text", F.lit(TIMESTAMP_INPUT_FORMAT)))
+    valid = (F.col("transaction_id").rlike(r"\A[A-Za-z0-9_-]{1,64}\z") &
+             F.col("card_holder_id").rlike(r"\A[A-Za-z0-9_-]{1,64}\z") &
+             F.col("amount").isNotNull() & (F.col("amount") > 0) & (F.col("amount") <= F.lit(999999999.99)) &
+             F.get_json_object("raw", "$.amount").rlike(r"\A[0-9]+(?:\.[0-9]{1,2}0*)?\z") &
+             F.col("location").isin(list(CITIES)) &
+             (F.length(F.trim("merchant_type")) > 0) & (F.length("merchant_type") <= 64) &
+             F.col("timestamp_text").rlike(rf"\A{TIMESTAMP_PATTERN}\z") &
+             F.year("timestamp").between(1, 9999) &
+             (F.col("timestamp") <= F.col("received_at") + F.expr(sql_interval(FUTURE_TOLERANCE_SECONDS))))
+    parsed = flat.withColumn("valid", F.coalesce(valid, F.lit(False)))
 
-    parsed = read_input()
-    transactions = parsed.filter("valid").select(*TRANSACTION_FIELDS)
+    # Même partitionnement que le store d’état, puis ordre stable au sein du micro-lot.
+    accepted = (parsed.filter("valid")
+                .repartition(int(spark.conf.get("spark.sql.shuffle.partitions")), "transaction_id")
+                .sortWithinPartitions("transaction_id", "received_at", "partition", "offset")
+                .dropDuplicates(["transaction_id"])
+                .select(*TRANSACTION_FIELDS))
+
+    def start_accepted():
+        # Le journal de commits du sink fichier expose uniquement les micro-lots validés.
+        return (accepted.writeStream.queryName("transactions_acceptees").format("parquet")
+                .option("checkpointLocation", f"{checkpoint}/deduplication")
+                .trigger(processingTime="5 seconds").start(accepted_path))
+
+    accepted_schema = T.StructType([*schema.fields[:-1], T.StructField("timestamp", T.TimestampType())])
+
+    def read_accepted():
+        return spark.readStream.schema(accepted_schema).parquet(accepted_path)
+
+    transactions = read_accepted()
 
     def save_cassandra(frame, table):
         # Upserts par clé primaire : une tentative répétée réécrit les mêmes lignes.
@@ -130,7 +162,7 @@ def run():
                      f"Écriture Cassandra {table}")
 
     def json_payload(frame, columns):
-        fields = [F.date_format("timestamp", "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").alias("timestamp") if name == "timestamp"
+        fields = [F.date_format("timestamp", TIMESTAMP_OUTPUT_FORMAT).alias("timestamp") if name == "timestamp"
                   else F.col(name) for name in columns]
         return frame.withColumn("payload", F.to_json(F.struct(*fields)))
 
@@ -178,10 +210,10 @@ def run():
         F.concat_ws(":", F.lit("MONTANT_ELEVE"), F.col("transaction_id")),
         F.lit(AMOUNT_DETAIL))
 
-    # Deux sources indépendantes évitent les ambiguïtés d’attribut d’une auto-jointure.
+    # Deux lectures du même journal évitent les ambiguïtés d’attribut d’une auto-jointure.
     geo = spark.createDataFrame([(name, *point) for name, point in CITIES.items()], ["location", "latitude", "longitude"])
     left = transactions.join(F.broadcast(geo), "location").withWatermark("timestamp", "10 minutes").alias("a")
-    right_tx = read_input().filter("valid").select(*TRANSACTION_FIELDS)
+    right_tx = read_accepted()
     right = right_tx.join(F.broadcast(geo), "location").withWatermark("timestamp", "10 minutes").alias("b")
     pairs = left.join(right, F.expr(f"""
         a.card_holder_id = b.card_holder_id
@@ -195,10 +227,10 @@ def run():
                  F.cos(F.col("a.latitude") * radians) * F.cos(F.col("b.latitude") * radians) *
                  F.pow(F.sin((F.col("a.longitude") - F.col("b.longitude")) * radians / 2), 2))
     distance = F.lit(6371.0088 * 2) * F.asin(F.sqrt(F.least(F.lit(1.0), haversine)))
-    seconds = F.col("a.timestamp").cast("double") - F.col("b.timestamp").cast("double")
+    seconds = (F.unix_micros("a.timestamp") - F.unix_micros("b.timestamp")) / 1_000_000
     travel = pairs.select(*[F.col(f"a.{name}").alias(name) for name in TRANSACTION_FIELDS],
                           F.col("b.transaction_id").alias("previous_id"), F.col("b.location").alias("previous_location"),
-                          F.date_format("b.timestamp", "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").alias("previous_timestamp"),
+                          F.date_format("b.timestamp", TIMESTAMP_OUTPUT_FORMAT).alias("previous_timestamp"),
                           distance.alias("distance_km"), seconds.alias("elapsed_seconds"))
     travel = travel.withColumn("speed_kmh", F.col("distance_km") * 3600 / F.greatest(F.col("elapsed_seconds"), F.lit(1)))
     travel = travel.filter((F.col("distance_km") >= MIN_DISTANCE_KM) & (F.col("speed_kmh") > SPEED_THRESHOLD))
@@ -240,7 +272,7 @@ def run():
                         .option("checkpointLocation", f"{checkpoint}/{name}")
                         .foreachBatch(sink).trigger(processingTime="5 seconds").start())
 
-    starters = {"messages_invalides": start_rejected}
+    starters = {"transactions_acceptees": start_accepted, "messages_invalides": start_rejected}
     for name, frame, sink in (("transactions", transactions, persist_transactions),
                               ("montants", high_amount, persist_alerts),
                               ("deplacements", travel, persist_alerts),

@@ -6,12 +6,13 @@ import subprocess
 import sys
 import time
 import uuid
+from collections import Counter
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-from fraud_core import detect, iso, parse_time, validate_transaction
+from fraud_core import TRANSACTION_FIELDS, detect, iso, parse_time, validate_transaction
 from storage import decode_cqlsh_json
 
 UTC = timezone.utc
@@ -41,10 +42,12 @@ def publish(events):
 
 def expected(events):
     history, alerts = [], {}
+    seen = set()
     for raw in events:
         tx = validate_transaction(raw)
-        if any(old["transaction_id"] == tx["transaction_id"] for old in history):
+        if tx["transaction_id"] in seen:
             continue
+        seen.add(tx["transaction_id"])
         for alert in detect(tx, history):
             alerts[alert["alert_id"]] = alert
         history.append(tx)
@@ -75,7 +78,7 @@ def start():
         tx("travel120-b", "travel120", 120, location="Tanger"),
         tx("travel120-a", "travel120", 0),
         tx("travel-over-a", "travel-over", 0),
-        tx("travel-over-b", "travel-over", 120.001, location="Tanger"),
+        tx("travel-over-b", "travel-over", 120.0005, location="Tanger"),
         tx("same-a", "same", 10), tx("same-b", "same", 50),
         tx("simultaneous-b", "simultaneous", 30, location="Tanger"),
         tx("simultaneous-a", "simultaneous", 30),
@@ -86,12 +89,14 @@ def start():
         tx("boundary-c", "boundary", 120),
         tx("accent", "accent", location="Fès"),
     ]
+    cases.append({**cases[0], "amount": 20000, "location": "Tanger", "timestamp": iso(anchor + timedelta(seconds=35))})
     invalid = [
         tx("bad-city", "invalid", location="Inconnue"),
         tx("bad-amount", "invalid", amount=-1),
         tx("bad-decimal", "invalid", amount=12.345),
         tx("bad-bool", "invalid", amount=True),
         tx("bad-time", "invalid", timestamp="2026-11-17T10:00:00"),
+        tx("bad-midnight", "invalid", timestamp="2026-11-17T24:00:00Z"),
         tx("bad-future", "invalid", timestamp=iso(datetime.now(UTC) + timedelta(hours=1))),
         tx("bad-merchant", "invalid", merchant_type=" "),
     ]
@@ -109,22 +114,52 @@ def start():
     manifest["published_at"] = iso(datetime.now(UTC))
     manifest["producer_seconds"] = round(time.monotonic() - begin, 3)
     save(folder, manifest)
-    print(json.dumps({"run": str(folder), "valid": len(cases), "invalid": len(invalid), "duplicates": 2}, ensure_ascii=False), flush=True)
+    print(json.dumps({"run": str(folder), "valid": len(cases) - 1, "invalid": len(invalid), "duplicates": 3},
+                     ensure_ascii=False), flush=True)
 
 
 def read_data(manifest):
     events, wanted = expected(manifest["events"])
-    days = sorted({parse_time(event["timestamp"]).date().isoformat() for event in events})
+    days = sorted({parse_time(event["timestamp"]).date().isoformat() for event in manifest["events"]})
     queries = []
     for day in days:
         queries.extend([f"SELECT JSON * FROM fraud_monitoring.{table} WHERE event_date='{day}';"
                         for table in ("alerts_by_day", "transactions_by_day")])
-    rows = cql(" ".join(queries))
     prefix = manifest["prefix"]
-    payloads = [json.loads(row["payload"]) for row in rows]
-    actual_tx = {r["transaction_id"]: r for r in payloads if "alert_id" not in r and r["transaction_id"].startswith(prefix)}
-    actual_alerts = {r["alert_id"]: r for r in payloads if "alert_id" in r and r["card_holder_id"].startswith(prefix)}
+    actual_tx, actual_alerts = [], []
+    for row in cql(" ".join(queries)):
+        payload = json.loads(row["payload"])
+        holder = payload.get("card_holder_id", "")
+        if "alert_id" in row:
+            if holder.startswith(prefix):
+                actual_alerts.append(payload)
+        elif row["transaction_id"].startswith(prefix) or holder.startswith(prefix):
+            actual_tx.append(row)
     return events, wanted, actual_tx, actual_alerts
+
+
+def transaction_issues(events, rows):
+    wanted = {event["transaction_id"]: event for event in events}
+    counts = Counter(row["transaction_id"] for row in rows)
+    mismatched = set()
+    for row in rows:
+        identity = row["transaction_id"]
+        if identity not in wanted:
+            continue
+        event = wanted[identity]
+        event_time = parse_time(event["timestamp"])
+        stored_time = event_time.replace(microsecond=event_time.microsecond // 1000 * 1000)
+        payload = json.loads(row["payload"])
+        if (set(payload) != set(TRANSACTION_FIELDS) or type(payload.get("amount")) not in (int, float)
+                or payload != event or parse_time(row["timestamp"]) != stored_time
+                or row["event_date"] != event_time.date().isoformat()):
+            mismatched.add(identity)
+    return {
+        "missing_transactions": sorted(wanted.keys() - counts.keys()),
+        "unexpected_transactions": sorted(counts.keys() - wanted.keys()),
+        "duplicate_transactions": sorted(identity for identity, count in counts.items() if count > 1),
+        "mismatched_transactions": sorted(mismatched),
+    }
 
 
 def comparable(alert):
@@ -135,20 +170,22 @@ def comparable(alert):
 def check(folder, manifest, timeout):
     started = time.monotonic()
     while True:
-        events, wanted, actual_tx, actual = read_data(manifest)
-        missing_tx = {r["transaction_id"] for r in events} - actual_tx.keys()
-        extra_tx = actual_tx.keys() - {r["transaction_id"] for r in events}
+        events, wanted, actual_tx, alert_rows = read_data(manifest)
+        issues = transaction_issues(events, actual_tx)
+        actual = {row["alert_id"]: row for row in alert_rows}
+        duplicate_alerts = len(alert_rows) - len(actual)
         mismatch = {key for key in wanted if key not in actual or comparable(actual[key]) != comparable(wanted[key])}
         unexpected = actual.keys() - wanted.keys()
         print(json.dumps({"transactions": len(actual_tx), "expected_transactions": len(events),
                           "alerts": len(actual), "expected_alerts": len(wanted),
-                          "missing_transactions": len(missing_tx), "mismatched_alerts": len(mismatch),
-                          "unexpected_transactions": list(extra_tx),
-                          "unexpected_alerts": list(unexpected)}, ensure_ascii=False), flush=True)
-        if not missing_tx and not extra_tx and not mismatch and not unexpected:
+                          **issues, "mismatched_alerts": len(mismatch), "duplicate_alerts": duplicate_alerts,
+                          "unexpected_alerts": sorted(unexpected)}, ensure_ascii=False), flush=True)
+        if not any(issues.values()) and not mismatch and not unexpected and not duplicate_alerts:
             break
         if time.monotonic() - started > timeout:
-            (folder / "failure.json").write_text(json.dumps({"expected": wanted, "actual": actual}, ensure_ascii=False, indent=2), encoding="utf-8")
+            failure = {"transaction_issues": issues, "expected_transactions": events, "actual_transactions": actual_tx,
+                       "expected_alerts": wanted, "actual_alerts": alert_rows}
+            (folder / "failure.json").write_text(json.dumps(failure, ensure_ascii=False, indent=2), encoding="utf-8")
             raise AssertionError("La recette Cassandra ne correspond pas aux règles attendues.")
         time.sleep(10)
     # Vérifier aussi la table principale et ses clés stables.
@@ -156,10 +193,11 @@ def check(folder, manifest, timeout):
     for day, client in sorted({(parse_time(a["timestamp"]).date().isoformat(), a["card_holder_id"]) for a in wanted.values()}):
         queries.append(f"SELECT JSON * FROM fraud_monitoring.detected_alerts WHERE alert_date='{day}' AND card_holder_id='{client}';")
     primary = cql(" ".join(queries)) if queries else []
-    assert len(primary) == len(wanted), "Doublons ou lignes manquantes dans detected_alerts"
-    assert {row["alert_id"] for row in primary} == set(wanted)
+    if len(primary) != len(wanted) or {row["alert_id"] for row in primary} != set(wanted):
+        raise AssertionError("Doublons ou lignes manquantes dans detected_alerts.")
     for row in primary:
-        assert comparable(json.loads(row["payload"])) == comparable(wanted[row["alert_id"]])
+        if comparable(json.loads(row["payload"])) != comparable(wanted[row["alert_id"]]):
+            raise AssertionError("Payload différent dans detected_alerts.")
     # Vérifier les deux sorties Kafka : les versions successives d'une alerte sont autorisées.
     outputs = {}
     for topic in ("fraud-alerts", "invalid-transactions"):
@@ -170,11 +208,14 @@ def check(folder, manifest, timeout):
         outputs[topic] = records
         (folder / (topic + ".json")).write_text(json.dumps(records, ensure_ascii=False, indent=2), encoding="utf-8")
     kafka_alerts = {row["alert_id"]: row for row in outputs["fraud-alerts"] if row["card_holder_id"].startswith(manifest["prefix"])}
-    assert set(kafka_alerts) == set(wanted), "Les identités Kafka et Cassandra diffèrent"
+    if set(kafka_alerts) != set(wanted):
+        raise AssertionError("Les identités Kafka et Cassandra diffèrent.")
     for key in wanted:
-        assert comparable(kafka_alerts[key]) == comparable(wanted[key]), "Payload Kafka différent"
+        if comparable(kafka_alerts[key]) != comparable(wanted[key]):
+            raise AssertionError("Payload Kafka différent.")
     rejected = {json.loads(row["raw"])["transaction_id"] for row in outputs["invalid-transactions"] if manifest["prefix"] in row["raw"]}
-    assert rejected == {row["transaction_id"] for row in manifest["invalid"]}, "Rejets invalides manquants ou incorrects"
+    if rejected != {row["transaction_id"] for row in manifest["invalid"]}:
+        raise AssertionError("Rejets invalides manquants ou incorrects.")
     record = {"at": iso(datetime.now(UTC)), "transactions": len(actual_tx), "alerts": len(actual),
               "invalid": len(rejected), "verification_seconds": round(time.monotonic()-started, 3),
               "phase": manifest.get("phase", "initial"), "result": "PASS"}

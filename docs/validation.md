@@ -1,5 +1,17 @@
 # Vérifications effectuées
 
+## Mise en page et navigation au clavier
+
+- Les six pages de démonstration ont été contrôlées dans Edge sur 17 dimensions de fenêtre, de 320 à 1 440 pixels de large, y compris deux formats paysage. Les contrôles couvrent le débordement de page, les panneaux de la barre supérieure et la lisibilité des commandes.
+- Le menu mobile maintient le focus au clavier, le rend au bouton à la fermeture et libère le contenu au retour à la mise en page de bureau. L’actualisation conserve le focus sur une alerte encore présente.
+- L’émulation tactile à 320 pixels a vérifié le lancement d’un scénario, l’enregistrement d’un suivi, le défilement du tableau, la remise à zéro des filtres et l’export CSV. Les 82 tests locaux ont également réussi.
+
+## Correction de l’ingestion
+
+- 82 tests locaux réussis sous Python 3.12 et 3.15. Ils couvrent le seuil de déplacement à la microseconde, le rejet de `24:00:00`, la lecture d’une ancienne base SQLite et la détection de lignes Cassandra altérées ou en double dans des réponses simulées.
+- Syntaxe Python, JavaScript et des deux scripts Bash vérifiée. Le jeu de recette a été construit hors ligne avec 19 transactions valides distinctes, quatre alertes attendues, neuf messages invalides et trois réémissions.
+- La version corrigée reste à valider avec Kafka, Spark et Cassandra. Les résultats Docker ci-dessous datent d’avant la correction de l’ingestion.
+
 ## Recette distribuée du 18 novembre 2026
 
 Docker Engine 29.4.0 et Compose 5.1.1 ont exécuté Kafka 3.9.0, Spark 3.5.3 et Cassandra 4.1.7 sur le poste Windows. Les trois images téléchargées via le miroir Google ont le même digest que les images officielles de Docker Hub. Spark a résolu les connecteurs Maven et enregistré un worker de deux cœurs. Les trois services d’initialisation ont terminé avec le code 0.

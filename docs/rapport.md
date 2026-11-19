@@ -27,7 +27,7 @@ Le choix du mode est explicite au lancement. Le mode de démonstration ne mesure
 | Persistance Cassandra | Connecteur DataFrame, upserts déterministes | Lecture CQL ciblée |
 | Partitionnement par date et client | Clé `((alert_date, card_holder_id), timestamp, alert_id)` | Vérification du DDL et requête par partition |
 | Cluster conteneurisé | Compose, KRaft, master et worker Spark, Cassandra | Santé, initialisation et enregistrement du worker |
-| `submit.sh` | Soumission en mode client, deux packages Maven | Lancement et observation de cinq requêtes |
+| `submit.sh` | Soumission en mode client, deux packages Maven | Lancement et observation de six requêtes |
 | `streaming_cassandra.py` | Pipeline et sinks | Recette de bout en bout |
 | `schema.cql` | DDL idempotent du keyspace et des tables | Réexécution sans erreur |
 
@@ -38,10 +38,12 @@ flowchart LR
     P[Producteur Python] -->|JSON · clé client| K[Kafka\nfinancial-transactions]
     K --> S[Spark Structured Streaming]
     S --> V[Validation du contrat]
-    V --> M[Montant élevé]
-    V --> I[Jointure temporelle\ndéplacement impossible]
-    V --> F[Fenêtre 2 min\nfréquence inhabituelle]
-    V --> T[Journal des transactions]
+    V -->|Valide| D[Déduplication par identifiant]
+    D --> Q[(Journal Parquet des transactions acceptées)]
+    Q --> M[Montant élevé]
+    Q --> I[Jointure temporelle\ndéplacement impossible]
+    Q --> F[Fenêtre 2 min\nfréquence inhabituelle]
+    Q --> T[Journal des transactions]
     V -->|Invalide| R[Kafka\ninvalid-transactions]
     M & I & F --> B[foreachBatch]
     B --> C[(Cassandra\ndetected_alerts / alerts_by_day)]
@@ -52,9 +54,9 @@ flowchart LR
     API --> L[(SQLite\njournal de suivi)]
 ```
 
-Spark héberge cinq requêtes indépendantes : rejets, transactions, montants, déplacements et fréquences. Chaque requête possède son propre checkpoint. La jointure avec état et l’agrégation avec état sont dans des requêtes distinctes pour éviter leur chaînage.
+Spark exécute six requêtes avec des checkpoints distincts. L’acceptation et le rejet lisent Kafka et appliquent le même filtre à partir de l’horodatage du message. La requête d’acceptation déduplique les identifiants et écrit le résultat dans un journal Parquet sur le volume partagé.
 
-Le flux brut est lu séparément par les requêtes. Cela coûte davantage de lectures qu’un système de production avec une couche de normalisation intermédiaire, mais garde le projet lisible et les garanties de reprise explicites.
+Le journal Parquet expose les micro-lots validés aux requêtes de persistance et de détection. Chaque règle peut progresser à son rythme. Le journal et l’état de déduplication grandissent avec le nombre de transactions uniques. Le projet conserve chaque identifiant dans son état pour reconnaître aussi les rejouements anciens.
 
 ### Réseau et ressources
 
@@ -68,11 +70,11 @@ Les volumes Kafka et Cassandra conservent les données. Un volume distinct conse
 
 Une transaction comporte les six champs indiqués dans le sujet. Le montant Spark est un `DecimalType(12, 2)`. Les catégories commerciales sont conservées telles que reçues ; la catégorie `Jewelry` de l’exemple reste donc acceptée.
 
-Les contrôles portent sur la présence des champs, les identifiants, le montant positif, la catégorie non vide, le référentiel géographique et un horodatage avec fuseau. Un horodatage futur de plus de cinq minutes est rejeté pour éviter de faire avancer artificiellement le watermark. Les rejets conservent le message brut et un motif dans `invalid-transactions`.
+Les contrôles portent sur la présence des champs, les identifiants, le montant positif, la catégorie non vide, le référentiel géographique et un horodatage avec fuseau. Le broker enregistre l’heure d’arrivée sur `financial-transactions` avec `LogAppendTime`. Un temps événement qui dépasse cette heure de plus de cinq minutes est rejeté. La comparaison reste stable quand Spark relit le même offset Kafka. Les rejets conservent le message brut et un motif dans `invalid-transactions`.
 
-Les données sont normalisées en UTC. La console convertit l’affichage avec le fuseau `Africa/Casablanca`, qui prend en compte les changements de décalage propres au Maroc. L’export conserve UTC pour faciliter les rapprochements.
+Les données sont normalisées en UTC à la microseconde pour les règles et le JSON. Cassandra stocke ses colonnes `timestamp` à la milliseconde. La console affiche les heures dans le fuseau `Africa/Casablanca` et les exports conservent le format UTC.
 
-Le contrat de production impose un identifiant unique par transaction. Le producteur génère ces identifiants, utilise le client CLI Kafka avec `acks=all` et active son idempotence. La démonstration ignore les transactions dont l’identifiant existe déjà. La fréquence Spark compte un ensemble d’identifiants distincts ; les alertes de montant et de déplacement utilisent des identifiants déterministes.
+Le producteur génère un identifiant unique par transaction et utilise le client CLI Kafka avec `acks=all` et l’idempotence activée. Si un identifiant arrive plusieurs fois, Spark et la démonstration conservent chacun leur première version valide. Dans le même micro-lot Spark, l’ordre est fixé par l’heure d’arrivée Kafka, la partition et l’offset. La fréquence Spark compte un ensemble d’identifiants distincts. Les alertes de montant et de déplacement utilisent des identifiants déterministes.
 
 ## 5. Détection
 
@@ -154,7 +156,7 @@ Les indicateurs de signalement utilisent l’union des identités associées aux
 
 Les requêtes de journal et de détection progressent indépendamment. Une alerte peut être visible avant sa transaction dans la table de consultation. La console indique alors que les indicateurs financiers sont provisoires ; elle ne prétend pas disposer d’une vue atomique du flux.
 
-Les checkpoints sont conservés entre les soumissions. Une évolution incompatible du schéma d’état nécessite une stratégie de migration et un nouveau chemin de checkpoint ; le projet n’efface jamais les anciens checkpoints automatiquement.
+Les checkpoints et le journal Parquet sont conservés entre les soumissions. Le job utilise un répertoire `v2` et détecte les anciens checkpoints au démarrage. La [recette](recette.md#premier-démarrage-après-la-correction-de-lingestion) explique comment démarrer avec des volumes distincts pour éviter de mélanger les données calculées par les deux versions.
 
 ## 8. Interface et investigation
 

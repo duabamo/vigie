@@ -13,6 +13,17 @@ from urllib.request import urlopen
 from fraud_core import HISTORY_SECONDS, UTC, Generator, detect, iso, parse_time, validate_transaction
 
 ROOT = Path(__file__).resolve().parent
+HISTORY = timedelta(seconds=HISTORY_SECONDS)
+MIN_TIME = datetime.min.replace(tzinfo=UTC)
+MAX_TIME = datetime.max.replace(tzinfo=UTC)
+
+
+def decode_payload(payload):
+    record = json.loads(payload)
+    record["timestamp"] = iso(parse_time(record["timestamp"]))
+    if record.get("previous_timestamp"):
+        record["previous_timestamp"] = iso(parse_time(record["previous_timestamp"]))
+    return record
 
 
 def decode_cqlsh_json(line):
@@ -40,6 +51,13 @@ class Store:
                 CREATE TABLE IF NOT EXISTS reviews (id TEXT PRIMARY KEY, status TEXT NOT NULL);
                 CREATE TABLE IF NOT EXISTS observed_alerts (id TEXT PRIMARY KEY);
             """)
+            if db.execute("PRAGMA user_version").fetchone()[0] == 0:
+                db.execute("BEGIN IMMEDIATE")
+                # Préserver le tri des anciens index textuels après le passage à six décimales.
+                for table in ("transactions", "alerts"):
+                    db.execute(f"UPDATE {table} SET timestamp = substr(timestamp, 1, 23) || '000Z' "
+                               "WHERE length(timestamp) = 24 AND substr(timestamp, 24, 1) = 'Z'")
+                db.execute("PRAGMA user_version = 1")
 
     @contextmanager
     def connect(self):
@@ -53,13 +71,14 @@ class Store:
     def ingest(self, raw):
         tx = validate_transaction(raw)
         event_time = parse_time(tx["timestamp"])
+        since = iso(event_time - min(HISTORY, event_time - MIN_TIME))
+        until = iso(event_time + min(HISTORY, MAX_TIME - event_time))
         with self.lock, self.connect() as db:
             if db.execute("SELECT 1 FROM transactions WHERE id=?", (tx["transaction_id"],)).fetchone():
                 return []
             rows = db.execute("SELECT payload FROM transactions WHERE client=? AND timestamp BETWEEN ? AND ?",
-                              (tx["card_holder_id"], iso(event_time - timedelta(seconds=HISTORY_SECONDS)),
-                               iso(event_time + timedelta(seconds=HISTORY_SECONDS)))).fetchall()
-            alerts = detect(tx, [json.loads(r[0]) for r in rows])
+                              (tx["card_holder_id"], since, until)).fetchall()
+            alerts = detect(tx, [decode_payload(r[0]) for r in rows])
             db.execute("INSERT INTO transactions VALUES (?,?,?,?)", (tx["transaction_id"], tx["card_holder_id"], tx["timestamp"], json.dumps(tx, ensure_ascii=False)))
             for alert in alerts:
                 db.execute("INSERT INTO alerts VALUES (?,?,?) ON CONFLICT(id) DO UPDATE SET timestamp=excluded.timestamp, payload=excluded.payload",
@@ -69,9 +88,10 @@ class Store:
     def rows(self, table, since, until):
         if table not in {"transactions", "alerts"}:
             raise ValueError("Table inconnue.")
+        since, until = iso(parse_time(since)), iso(parse_time(until))
         with self.connect() as db:
             rows = db.execute(f"SELECT payload FROM {table} WHERE timestamp BETWEEN ? AND ? ORDER BY timestamp DESC LIMIT 10001", (since, until)).fetchall()
-        return [json.loads(r[0]) for r in rows]
+        return [decode_payload(r[0]) for r in rows]
 
     def reviews(self):
         with self.connect() as db:
@@ -174,11 +194,13 @@ class ClusterSource:
             if line.startswith("{"):
                 record = decode_cqlsh_json(line)
                 # Les vues CQL conservent le contrat JSON d’origine.
-                rows.append(json.loads(record["payload"]))
+                rows.append(decode_payload(record["payload"]))
         return rows
 
     def read(self, since, until):
-        first, last = parse_time(since).date(), parse_time(until).date()
+        first_time, last_time = parse_time(since), parse_time(until)
+        first, last = first_time.date(), last_time.date()
+        since, until = iso(first_time), iso(last_time)
         transactions, alerts = [], []
         self.truncated = False
         try:
